@@ -1,0 +1,143 @@
+<html>
+
+<head>
+<title>Test</title>
+<meta charset="UTF-8">
+<script src="vector.js"></script>
+<script src="line.js"></script>
+<script src="player.js"></script>
+<script>
+var w = 500;
+var h = 500;
+var hw = w * 0.5;
+var hh = h * 0.5;
+var canvas = null;
+var context = null;
+var localCanvas = null;
+var localContext = null;
+var lastTime = 0;
+var player = null;
+var lines = [];
+
+window.onload = function() {
+    canvas = document.getElementById("canvas");
+    context = canvas.getContext("2d");
+    canvas.width = w;
+    canvas.height = h;
+    localCanvas = document.getElementById("localCanvas");
+    localContext = localCanvas.getContext("2d");
+    canvas.width = w;
+    canvas.height = h;
+    localCanvas.width = w;
+    localCanvas.height = h;
+    player = new Player(hw, hh);
+
+    lines.push(new Line(hw, hh, 200, 0, 141.42, 141.42, "red", player));
+    lines.push(new Line(hw, hh, 141.42, 141.42, 0, 200, "red", player));
+    lines.push(new Line(hw, hh, 0, 200, -141.42, 141.42, "red", player));
+    lines.push(new Line(hw, hh, -141.42, 141.42, -200, 0, "red", player));
+    lines.push(new Line(hw, hh, -200, 0, -141.42, -141.42, "red", player));
+    lines.push(new Line(hw, hh, -141.42, -141.42, 0, -200, "red", player));
+    lines.push(new Line(hw, hh, 0, -200, 141.42, -141.42, "red", player));
+    lines.push(new Line(hw, hh, 141.42, -141.42, 200, 0, "red", player));
+
+    lines.push(new Line(hw, hh, 175, 0, 87.5, 151.55, "red", player));
+    lines.push(new Line(hw, hh, 87.5, 151.55, -87.5, 151.55, "red", player));
+    lines.push(new Line(hw, hh, -87.5, 151.55, -175, 0, "red", player));
+    lines.push(new Line(hw, hh, -175, 0, -87.5, -151.55, "red", player));
+    lines.push(new Line(hw, hh, -87.5, -151.55, 87.5, -151.55, "red", player));
+    lines.push(new Line(hw, hh, 87.5, -151.55, 175, 0, "red", player));
+
+    document.onkeydown = onKeyDown;
+    document.onkeyup = onKeyUp;
+    render();
+}
+        
+function onKeyDown(key) {
+    switch(key.keyCode) {
+        case 65: player.left = true; break;
+        case 68: player.right = true; break;
+        case 87: player.up = true; break;
+    }
+}
+
+function onKeyUp(key) {
+    switch(key.keyCode) {
+        case 65: player.left = false; break;
+        case 68: player.right = false; break;
+        case 87: player.up = false; break;
+    }
+}
+
+function render(time) {
+    var dt = (time - lastTime) / 1000;
+    var fps = 1 / dt;
+    console.log(fps);
+    context.imageSmoothingEnabled = false;
+    context.clearRect(0, 0, w, h);
+    localContext.imageSmoothingEnabled = false;
+    localContext.clearRect(0, 0, w, h);
+    lastTime = time;
+
+    if (fps < 3) {
+        requestAnimationFrame(render);
+        return;
+    }
+
+    player.update(dt);
+    player.render(context);
+    player.localRender(localContext);
+
+    for (let line of lines) {
+        line.update(dt)
+        line.render(context);
+        line.localRender(localContext);
+
+        var vector = player.fovLeft.intersect(line);
+        if (vector != null) {
+            localContext.fillStyle = "white";
+            localContext.fillRect(hw + vector.x - 2, hh - (vector.y + 2), 4, 4);
+        }
+        var vector = player.fovRight.intersect(line);
+        if (vector != null) {
+            localContext.fillStyle = "white";
+            localContext.fillRect(hw + vector.x - 2, hh - (vector.y + 2), 4, 4);
+        }
+        var vector = player.fovCenter.intersect(line);
+        if (vector != null) {
+            localContext.fillStyle = "white";
+            localContext.fillRect(hw + vector.x - 2, hh - (vector.y + 2), 4, 4);
+        }
+
+        if (line.localPosition1.y >= 0 && line.localPosition1.y <= player.fovCenter.localPosition1.y) {
+            var len = Math.sqrt(line.localPosition1.x * line.localPosition1.x + line.localPosition1.y * line.localPosition1.y);
+            var degrees = Math.acos(line.localPosition1.x / len) * 180 / Math.PI;
+            if (degrees >= 45 && degrees <= 135) {
+                localContext.fillStyle = "white";
+                localContext.fillRect(hw + line.localPosition1.x - 2, hh - (line.localPosition1.y + 2), 4, 4);
+            }
+        }
+
+        if (line.localPosition2.y >= 0 && line.localPosition2.y <= player.fovCenter.localPosition1.y) {
+            var len = Math.sqrt(line.localPosition2.x * line.localPosition2.x + line.localPosition2.y * line.localPosition2.y);
+            var degrees = Math.acos(line.localPosition2.x / len) * 180 / Math.PI;
+            if (degrees >= 45 && degrees <= 135) {
+                localContext.fillStyle = "white";
+                localContext.fillRect(hw + line.localPosition2.x - 2, hh - (line.localPosition2.y + 2), 4, 4);
+            }
+        }
+    }
+    
+    requestAnimationFrame(render)
+}
+</script>
+
+</head>
+<body>
+
+<canvas id="canvas" style="background-color: black;"></canvas>
+<br /><br />
+<canvas id="localCanvas" style="background-color: black;"></canvas>
+
+</body>
+</html>
