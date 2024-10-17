@@ -121,12 +121,13 @@ function render(time) {
             var xDiff = right.x - left.x;
             var yDiff = right.y - left.y;
 
-            for (var sx = 0; sx < max - min; sx++) {
-                var zRatio = sx / (max - min);
-                var z = left.y + yDiff * zRatio;
-                var height = 100 / (100 + z) * height3d;
+            for (var sx = 0; sx < max - min; sx += 2) {
+                var ratio = sx / (max - min);
+                var x = left.x + xDiff * ratio;
+                var y = left.y + yDiff * ratio;
+                var height = 50 / (50 + y) * height3d;
                 context3d.fillStyle = line.color;
-                context3d.fillRect(min + sx, height3d * 0.5 - height * 0.5, 2, height);
+                context3d.fillRect(min + sx, height3d * 0.5 - height * 0.5, 3, height);
             }
         }
     }
