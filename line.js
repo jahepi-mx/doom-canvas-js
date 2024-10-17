@@ -13,6 +13,8 @@ class Line {
         this.player = player;
         this.len = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
         this.lenNoSqrt = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+        this.intersectA = null;
+        this.intersectB = null;
     }
 
     update(dt) {
@@ -22,12 +24,8 @@ class Line {
         this.localDiff.y = this.localPosition2.y - this.localPosition1.y;
         this.localUnit.x = this.localDiff.x / this.len;
         this.localUnit.y = this.localDiff.y / this.len;
-        if (this.localUnit.x != 0) {
-            this.ratio = this.localDiff.x / this.localUnit.x;
-        }
-        if (this.localUnit.y != 0) {
-            this.ratio = this.localDiff.y / this.localUnit.y
-        }
+        this.ratio = this.localUnit.x != 0 ? this.localDiff.x / this.localUnit.x : this.ratio;
+        this.ratio = this.localUnit.y != 0 ? this.localDiff.y / this.localUnit.y : this.ratio;
     }
 
     render(context) {
@@ -68,14 +66,9 @@ class Line {
                 x = (-s2 * line.localPosition1.x + line.localPosition1.y + s1 * this.localPosition1.x - this.localPosition1.y) / (s1 - s2);
                 y = s1 * x - s1 * this.localPosition1.x + this.localPosition1.y;
             }
-            var ratio = 0;
             var diff = new Vector(x - line.localPosition1.x, y - line.localPosition1.y);
-            if (line.localUnit.x != 0) {
-                ratio = diff.x / line.localUnit.x;
-            }
-            if (line.localUnit.y != 0) {
-                ratio = diff.y / line.localUnit.y
-            }
+            var ratio = line.localUnit.x != 0 ? diff.x / line.localUnit.x : 0;
+            ratio = line.localUnit.y != 0 ? diff.y / line.localUnit.y : ratio;
 
             var diff = new Vector(x - this.localPosition1.x, y - this.localPosition1.y);
             var dot = diff.x * this.localUnit.x + diff.y * this.localUnit.y;
@@ -86,5 +79,49 @@ class Line {
             }
         }
         return null;
+    }
+
+    hasIntersectionPoints() {
+        var intersections = [];
+        var counter = 0;
+        var leftPos = this.player.fovLeft.intersect(this);
+        var centerPos = this.player.fovCenter.intersect(this);
+        var rightPos = this.player.fovRight.intersect(this);
+        var auxPos1 = null, auxPos2 = null;
+        if (this.localPosition1.y >= 0 && this.localPosition1.y <= this.player.fovCenter.localPosition1.y) {
+            var len = Math.sqrt(this.localPosition1.x * this.localPosition1.x + this.localPosition1.y * this.localPosition1.y);
+            var degrees = Math.acos(this.localPosition1.x / len) * 180 / Math.PI;
+            auxPos1 = degrees >= 90 - this.player.fovDegrees && degrees <= 90 + this.player.fovDegrees ? this.localPosition1 : auxPos1;
+        }
+        if (this.localPosition2.y >= 0 && this.localPosition2.y <= this.player.fovCenter.localPosition1.y) {
+            var len = Math.sqrt(this.localPosition2.x * this.localPosition2.x + this.localPosition2.y * this.localPosition2.y);
+            var degrees = Math.acos(this.localPosition2.x / len) * 180 / Math.PI;
+            auxPos2 = degrees >= 90 - this.player.fovDegrees && degrees <= 90 + this.player.fovDegrees ? this.localPosition2 : auxPos2;
+        }
+        if (leftPos != null) {
+            intersections.push(leftPos);
+            counter++;
+        }
+        if (auxPos1 != null) {
+            intersections.push(auxPos1);
+            counter++;
+        }
+        if (centerPos != null) {
+            intersections.push(centerPos);
+            counter++;
+        }
+        if (rightPos != null) {
+            intersections.push(rightPos);
+            counter++;
+        }
+        if (auxPos2 != null) {
+            intersections.push(auxPos2);
+            counter++;
+        }
+        if (counter >= 2) {
+            this.intersectA = intersections[0];
+            this.intersectB = intersections[counter - 1];
+        }
+        return counter >= 2;
     }
 }

@@ -15,9 +15,13 @@ var canvas = null;
 var context = null;
 var localCanvas = null;
 var localContext = null;
+var canvas3d = null;
+var context3d = null;
 var lastTime = 0;
 var player = null;
 var lines = [];
+var width3d = 300;
+var height3d = 300;
 
 window.onload = function() {
     canvas = document.getElementById("canvas");
@@ -26,28 +30,23 @@ window.onload = function() {
     canvas.height = h;
     localCanvas = document.getElementById("localCanvas");
     localContext = localCanvas.getContext("2d");
-    canvas.width = w;
-    canvas.height = h;
     localCanvas.width = w;
     localCanvas.height = h;
+    canvas3d = document.getElementById("3dCanvas");
+    context3d = canvas3d.getContext("2d");
+    canvas3d.width = width3d;
+    canvas3d.height = height3d;
     player = new Player(hw, hh);
 
-    lines.push(new Line(hw, hh, 200, 0, 141.42, 141.42, "red", player));
-    lines.push(new Line(hw, hh, 141.42, 141.42, 0, 200, "red", player));
-    lines.push(new Line(hw, hh, 0, 200, -141.42, 141.42, "red", player));
-    lines.push(new Line(hw, hh, -141.42, 141.42, -200, 0, "red", player));
-    lines.push(new Line(hw, hh, -200, 0, -141.42, -141.42, "red", player));
-    lines.push(new Line(hw, hh, -141.42, -141.42, 0, -200, "red", player));
-    lines.push(new Line(hw, hh, 0, -200, 141.42, -141.42, "red", player));
-    lines.push(new Line(hw, hh, 141.42, -141.42, 200, 0, "red", player));
-
-    lines.push(new Line(hw, hh, 175, 0, 87.5, 151.55, "red", player));
-    lines.push(new Line(hw, hh, 87.5, 151.55, -87.5, 151.55, "red", player));
-    lines.push(new Line(hw, hh, -87.5, 151.55, -175, 0, "red", player));
-    lines.push(new Line(hw, hh, -175, 0, -87.5, -151.55, "red", player));
-    lines.push(new Line(hw, hh, -87.5, -151.55, 87.5, -151.55, "red", player));
-    lines.push(new Line(hw, hh, 87.5, -151.55, 175, 0, "red", player));
-
+    lines.push(new Line(hw, hh, -141.42, 141.42, 0, 200, "yellow", player));
+    lines.push(new Line(hw, hh, 0, 200, 141.42, 141.42, "blue", player));
+    lines.push(new Line(hw, hh, 141.42, 141.42, 200, 0, "red", player));
+    lines.push(new Line(hw, hh, 200, 0, 141.42, -141.42, "brown", player));
+    lines.push(new Line(hw, hh, 141.42, -141.42, 0, -200, "green", player));
+    lines.push(new Line(hw, hh,  0, -200, -141.42, -141.42, "pink", player));
+    lines.push(new Line(hw, hh, -141.42, -141.42, -200, 0, "white", player));
+    lines.push(new Line(hw, hh, -200, 0, -141.42, 141.42, "orange", player));
+    
     document.onkeydown = onKeyDown;
     document.onkeyup = onKeyUp;
     render();
@@ -77,6 +76,8 @@ function render(time) {
     context.clearRect(0, 0, w, h);
     localContext.imageSmoothingEnabled = false;
     localContext.clearRect(0, 0, w, h);
+    context3d.imageSmoothingEnabled = false;
+    context3d.clearRect(0, 0, w, h);
     lastTime = time;
 
     if (fps < 3) {
@@ -92,38 +93,40 @@ function render(time) {
         line.update(dt)
         line.render(context);
         line.localRender(localContext);
+        
+        if (line.hasIntersectionPoints()) {
+            localContext.fillStyle = "white";
+            localContext.fillRect(hw + line.intersectA.x - 3, hh - (line.intersectA.y + 3), 6, 6);
+            localContext.fillRect(hw + line.intersectB.x - 3, hh - (line.intersectB.y + 3), 6, 6);
 
-        var vector = player.fovLeft.intersect(line);
-        if (vector != null) {
-            localContext.fillStyle = "white";
-            localContext.fillRect(hw + vector.x - 2, hh - (vector.y + 2), 4, 4);
-        }
-        var vector = player.fovRight.intersect(line);
-        if (vector != null) {
-            localContext.fillStyle = "white";
-            localContext.fillRect(hw + vector.x - 2, hh - (vector.y + 2), 4, 4);
-        }
-        var vector = player.fovCenter.intersect(line);
-        if (vector != null) {
-            localContext.fillStyle = "white";
-            localContext.fillRect(hw + vector.x - 2, hh - (vector.y + 2), 4, 4);
-        }
+            var ratioA = player.fovCenter.localPosition1.y / line.intersectA.y;
+            var ratioB = player.fovCenter.localPosition1.y / line.intersectB.y;
+            var xA = line.intersectA.x * ratioA + player.fovCenter.len * 0.5;
+            var xB = line.intersectB.x * ratioB + player.fovCenter.len * 0.5;
 
-        if (line.localPosition1.y >= 0 && line.localPosition1.y <= player.fovCenter.localPosition1.y) {
-            var len = Math.sqrt(line.localPosition1.x * line.localPosition1.x + line.localPosition1.y * line.localPosition1.y);
-            var degrees = Math.acos(line.localPosition1.x / len) * 180 / Math.PI;
-            if (degrees >= 45 && degrees <= 135) {
-                localContext.fillStyle = "white";
-                localContext.fillRect(hw + line.localPosition1.x - 2, hh - (line.localPosition1.y + 2), 4, 4);
+            var xScreenA = xA / player.fovCenter.len * width3d;
+            var xScreenB = xB / player.fovCenter.len * width3d;
+            
+            var min = xScreenA;
+            var left = line.intersectA;
+            var max = xScreenB;
+            var right = line.intersectB;
+            if (xScreenA > xScreenB) {
+                min = xScreenB;
+                left = line.intersectB;
+                max = xScreenA;
+                right = line.intersectA;
             }
-        }
+            
+            var xDiff = right.x - left.x;
+            var yDiff = right.y - left.y;
 
-        if (line.localPosition2.y >= 0 && line.localPosition2.y <= player.fovCenter.localPosition1.y) {
-            var len = Math.sqrt(line.localPosition2.x * line.localPosition2.x + line.localPosition2.y * line.localPosition2.y);
-            var degrees = Math.acos(line.localPosition2.x / len) * 180 / Math.PI;
-            if (degrees >= 45 && degrees <= 135) {
-                localContext.fillStyle = "white";
-                localContext.fillRect(hw + line.localPosition2.x - 2, hh - (line.localPosition2.y + 2), 4, 4);
+            for (var sx = 0; sx < max - min; sx++) {
+                var zRatio = sx / (max - min);
+                var z = left.y + yDiff * zRatio;
+                var height = 100 / (100 + z) * height3d;
+                context3d.fillStyle = line.color;
+                context3d.fillRect(min + sx, height3d * 0.5 - height * 0.5, 1, height);
             }
         }
     }
@@ -138,6 +141,8 @@ function render(time) {
 <canvas id="canvas" style="background-color: black;"></canvas>
 <br /><br />
 <canvas id="localCanvas" style="background-color: black;"></canvas>
+<br /><br />
+<canvas id="3dCanvas" style="background-color: black;"></canvas>
 
 </body>
 </html>

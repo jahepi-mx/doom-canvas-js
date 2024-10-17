@@ -15,6 +15,8 @@ class Player {
         this.invXAxis = new Vector(0, 0);
         this.invYAxis = new Vector(0, 0);
 
+        this.fovDegrees = 25;
+        this.fovLen = 230;
         this.fovLeft = null;
         this.fovRight = null;
         this.fovCenter = null;
@@ -39,8 +41,8 @@ class Player {
         this.invYAxis.x = this.xAxis.y;
         this.invYAxis.y = this.yAxis.y;
 
-        this.fovLeft = new Line(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + Math.cos((this.degrees + 45) * this.toRadians) * 100, this.position.y + Math.sin((this.degrees + 45) * this.toRadians) * 100, 'green', this);
-        this.fovRight = new Line(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + Math.cos((this.degrees - 45) * this.toRadians) * 100, this.position.y + Math.sin((this.degrees - 45) * this.toRadians) * 100, 'green', this);
+        this.fovLeft = new Line(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + Math.cos((this.degrees + this.fovDegrees) * this.toRadians) * this.fovLen, this.position.y + Math.sin((this.degrees + this.fovDegrees) * this.toRadians) * this.fovLen, 'green', this);
+        this.fovRight = new Line(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + Math.cos((this.degrees - this.fovDegrees) * this.toRadians) * this.fovLen, this.position.y + Math.sin((this.degrees - this.fovDegrees) * this.toRadians) * this.fovLen, 'green', this);
         this.fovCenter = new Line(this.offset.x, this.offset.y, this.fovLeft.position2.x, this.fovLeft.position2.y, this.fovRight.position2.x, this.fovRight.position2.y, 'green', this);
         this.fovLeft.update(dt);
         this.fovRight.update(dt);
