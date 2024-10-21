@@ -22,6 +22,12 @@ var player = null;
 var lines = [];
 var width3d = 400;
 var height3d = 400;
+var hw3d = width3d * 0.5;
+var hh3d = height3d * 0.5;
+
+//Perpective
+var tan = 0;
+var camZOffset = new Vector(0, 0);
 
 window.onload = function() {
     canvas = document.getElementById("canvas");
@@ -38,6 +44,9 @@ window.onload = function() {
     canvas3d.height = height3d;
     player = new Player(hw, hh);
 
+    lines.push(new Line(hw, hh, -141.42, 141.42, -100, 250, "yellow", player));
+    lines.push(new Line(hw, hh, -100, 250, 0, 200, "yellow", player));
+
     lines.push(new Line(hw, hh, -141.42, 141.42, 0, 200, "yellow", player));
     lines.push(new Line(hw, hh, 0, 200, 141.42, 141.42, "blue", player));
     lines.push(new Line(hw, hh, 141.42, 141.42, 200, 0, "red", player));
@@ -46,7 +55,10 @@ window.onload = function() {
     lines.push(new Line(hw, hh,  0, -200, -141.42, -141.42, "pink", player));
     lines.push(new Line(hw, hh, -141.42, -141.42, -200, 0, "white", player));
     lines.push(new Line(hw, hh, -200, 0, -141.42, 141.42, "orange", player));
-    
+
+    tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
+    camZOffset.z = 0;
+
     document.onkeydown = onKeyDown;
     document.onkeyup = onKeyUp;
     render();
@@ -71,13 +83,13 @@ function onKeyUp(key) {
 function render(time) {
     var dt = (time - lastTime) / 1000;
     var fps = 1 / dt;
-    console.log(fps);
+    //console.log(fps);
     context.imageSmoothingEnabled = false;
     context.clearRect(0, 0, w, h);
     localContext.imageSmoothingEnabled = false;
     localContext.clearRect(0, 0, w, h);
     context3d.imageSmoothingEnabled = false;
-    context3d.clearRect(0, 0, w, h);
+    context3d.clearRect(0, 0, width3d, height3d);
     lastTime = time;
 
     if (fps < 3) {
@@ -99,6 +111,49 @@ function render(time) {
             localContext.fillRect(hw + line.intersectA.x - 3, hh - (line.intersectA.y + 3), 6, 6);
             localContext.fillRect(hw + line.intersectB.x - 3, hh - (line.intersectB.y + 3), 6, 6);
 
+            // Camera Z offset
+            line.intersectA.z -= camZOffset.z;
+            line.intersectB.z -= camZOffset.z;
+
+            var sxAUp = line.intersectA.x * (1 / line.intersectA.y) * tan * hw3d;
+            var szAUp = (line.intersectA.z + line.height * 0.5) * (1 / line.intersectA.y) * tan * hh3d;
+            var sxBUp = line.intersectB.x * (1 / line.intersectB.y) * tan * hw3d;
+            var szBUp = (line.intersectB.z + line.height * 0.5) * (1 / line.intersectB.y) * tan * hh3d;
+
+            var sxADown = line.intersectA.x * (1 / line.intersectA.y) * tan * hw3d;
+            var szADown = (line.intersectA.z - line.height * 0.5) * (1 / line.intersectA.y) * tan * hh3d;
+            var sxBDown = line.intersectB.x * (1 / line.intersectB.y) * tan * hw3d;
+            var szBDown = (line.intersectB.z - line.height * 0.5) * (1 / line.intersectB.y) * tan * hh3d;
+
+            context3d.beginPath();
+            context3d.moveTo(hw3d + sxADown, hh3d - szADown);
+            context3d.lineTo(hw3d + sxBDown, hh3d - szBDown);
+            context3d.lineWidth = 3;
+            context3d.strokeStyle = 'white';
+            context3d.stroke();
+
+            context3d.beginPath();
+            context3d.moveTo(hw3d + sxAUp, hh3d - szAUp);
+            context3d.lineTo(hw3d + sxBUp, hh3d - szBUp);
+            context3d.lineWidth = 3;
+            context3d.strokeStyle = 'white';
+            context3d.stroke();
+
+            context3d.beginPath();
+            context3d.moveTo(hw3d + sxADown, hh3d - szADown);
+            context3d.lineTo(hw3d + sxAUp, hh3d - szAUp);
+            context3d.lineWidth = 3;
+            context3d.strokeStyle = 'white';
+            context3d.stroke();
+
+            context3d.beginPath();
+            context3d.moveTo(hw3d + sxBDown, hh3d - szBDown);
+            context3d.lineTo(hw3d + sxBUp, hh3d - szBUp);
+            context3d.lineWidth = 3;
+            context3d.strokeStyle = 'white';
+            context3d.stroke();
+
+            /*
             var ratioA = player.fovCenter.localPosition1.y / line.intersectA.y;
             var ratioB = player.fovCenter.localPosition1.y / line.intersectB.y;
             var xA = line.intersectA.x * ratioA + player.fovCenter.len * 0.5;
@@ -131,10 +186,10 @@ function render(time) {
                 var height = h1 + diffh * ratio;
                 var z = left.y + diffz * ratio;
                 zBuffer.push({'height': height, 'x':sx, 'z': z, 'color': line.color, 'width': hwid});
-            }
+            }*/
         }
     }
-    
+    /*
     context3d.fillStyle = '#87ceeb';
     context3d.fillRect(0, 0, width3d, height3d * 0.5);
     context3d.fillStyle = 'gray';
@@ -145,6 +200,7 @@ function render(time) {
         context3d.fillStyle = obj.color;
         context3d.fillRect(obj.x, height3d * 0.5 - obj.height * 0.5, obj.width + 1, obj.height);
     }
+        */
     requestAnimationFrame(render)
 }
 </script>
