@@ -5,7 +5,7 @@ class Player {
         this.toDegrees = 180 / Math.PI;
         this.degrees = 90;
         this.position = new Vector(0, 0);
-        this.velocity = new Vector(90, 0);
+        this.velocity = new Vector(200, 120);
         this.left = this.right = this.up = false;
         this.offset = new Vector(offsetx, offsety);
         this.size = new Vector(10, 10);
@@ -15,7 +15,7 @@ class Player {
         this.invXAxis = new Vector(0, 0);
         this.invYAxis = new Vector(0, 0);
 
-        this.fovDegrees = 30;
+        this.fovDegrees = 35;
         this.fovLen = 800;
         this.fovLeft = null;
         this.fovRight = null;
@@ -25,10 +25,10 @@ class Player {
     update(dt) {
 
         if (this.left) {
-            this.degrees -= this.velocity.x * dt;
+            this.degrees -= this.velocity.y * dt;
         }
         if (this.right) {
-            this.degrees += this.velocity.x * dt;
+            this.degrees += this.velocity.y * dt;
         }
 
         this.yAxis.x = Math.cos(this.degrees * this.toRadians);

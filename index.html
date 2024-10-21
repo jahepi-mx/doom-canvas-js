@@ -20,8 +20,8 @@ var context3d = null;
 var lastTime = 0;
 var player = null;
 var lines = [];
-var width3d = 300;
-var height3d = 300;
+var width3d = 400;
+var height3d = 400;
 
 window.onload = function() {
     canvas = document.getElementById("canvas");
@@ -88,7 +88,7 @@ function render(time) {
     player.update(dt);
     player.render(context);
     player.localRender(localContext);
-
+    var zBuffer = [];
     for (let line of lines) {
         line.update(dt)
         line.render(context);
@@ -103,7 +103,6 @@ function render(time) {
             var ratioB = player.fovCenter.localPosition1.y / line.intersectB.y;
             var xA = line.intersectA.x * ratioA + player.fovCenter.len * 0.5;
             var xB = line.intersectB.x * ratioB + player.fovCenter.len * 0.5;
-
             var xScreenA = xA / player.fovCenter.len * width3d;
             var xScreenB = xB / player.fovCenter.len * width3d;
             
@@ -121,17 +120,31 @@ function render(time) {
             var xDiff = right.x - left.x;
             var yDiff = right.y - left.y;
 
-            for (var sx = 0; sx < max - min; sx += 2) {
-                var ratio = sx / (max - min);
-                var x = left.x + xDiff * ratio;
-                var y = left.y + yDiff * ratio;
-                var height = 50 / (50 + y) * height3d;
-                context3d.fillStyle = line.color;
-                context3d.fillRect(min + sx, height3d * 0.5 - height * 0.5, 3, height);
+            var h1 = (100 / (100 + left.y)) * height3d; 
+            var h2 = (100 / (100 + right.y)) * height3d;
+            
+            var hwid = 2;
+            var diffh = h2 - h1;
+            var diffz = right.y - left.y;
+            for (var sx = min; sx <= max; sx += hwid) {
+                var ratio = (sx - min) / (max - min);
+                var height = h1 + diffh * ratio;
+                var z = left.y + diffz * ratio;
+                zBuffer.push({'height': height, 'x':sx, 'z': z, 'color': line.color, 'width': hwid});
             }
         }
     }
     
+    context3d.fillStyle = '#87ceeb';
+    context3d.fillRect(0, 0, width3d, height3d * 0.5);
+    context3d.fillStyle = 'gray';
+    context3d.fillRect(0, height3d * 0.5, width3d, height3d * 0.5);
+
+    zBuffer.sort((a, b) => b.z - a.z);
+    for (let obj of zBuffer) {
+        context3d.fillStyle = obj.color;
+        context3d.fillRect(obj.x, height3d * 0.5 - obj.height * 0.5, obj.width + 1, obj.height);
+    }
     requestAnimationFrame(render)
 }
 </script>
@@ -140,9 +153,7 @@ function render(time) {
 <body>
 
 <canvas id="canvas" style="background-color: black;"></canvas>
-<br /><br />
 <canvas id="localCanvas" style="background-color: black;"></canvas>
-<br /><br />
 <canvas id="3dCanvas" style="background-color: black;"></canvas>
 
 </body>
