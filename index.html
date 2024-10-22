@@ -153,54 +153,32 @@ function render(time) {
             context3d.strokeStyle = 'white';
             context3d.stroke();
 
-            /*
-            var ratioA = player.fovCenter.localPosition1.y / line.intersectA.y;
-            var ratioB = player.fovCenter.localPosition1.y / line.intersectB.y;
-            var xA = line.intersectA.x * ratioA + player.fovCenter.len * 0.5;
-            var xB = line.intersectB.x * ratioB + player.fovCenter.len * 0.5;
-            var xScreenA = xA / player.fovCenter.len * width3d;
-            var xScreenB = xB / player.fovCenter.len * width3d;
-            
-            var min = xScreenA;
-            var left = line.intersectA;
-            var max = xScreenB;
-            var right = line.intersectB;
-            if (xScreenA > xScreenB) {
-                min = xScreenB;
-                left = line.intersectB;
-                max = xScreenA;
-                right = line.intersectA;
+            // Shading
+            var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
+            var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
+            var yDiff = line.intersectB.y - line.intersectA.y;
+            var lineWidth = 2;
+            var min = Math.min(sxAUp, sxBUp);
+            var max = Math.max(sxAUp, sxBUp);
+            for (var i = min, step = 0; i < max; i += lineWidth, step += lineWidth) {
+                var top = upSlope * i + upSlope * -sxAUp + szAUp;
+                var bottom = downSlope * i + downSlope * -sxADown + szADown;
+                var depthOrder = line.intersectA.y + yDiff * (step / (max - min))
+                zBuffer.push({'height': top - bottom, 'x': i, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': depthOrder});
             }
-            
-            var xDiff = right.x - left.x;
-            var yDiff = right.y - left.y;
-
-            var h1 = (100 / (100 + left.y)) * height3d; 
-            var h2 = (100 / (100 + right.y)) * height3d;
-            
-            var hwid = 2;
-            var diffh = h2 - h1;
-            var diffz = right.y - left.y;
-            for (var sx = min; sx <= max; sx += hwid) {
-                var ratio = (sx - min) / (max - min);
-                var height = h1 + diffh * ratio;
-                var z = left.y + diffz * ratio;
-                zBuffer.push({'height': height, 'x':sx, 'z': z, 'color': line.color, 'width': hwid});
-            }*/
         }
     }
-    /*
+    
     context3d.fillStyle = '#87ceeb';
-    context3d.fillRect(0, 0, width3d, height3d * 0.5);
+    context3d.fillRect(0, 0, width3d, hh3d);
     context3d.fillStyle = 'gray';
-    context3d.fillRect(0, height3d * 0.5, width3d, height3d * 0.5);
+    context3d.fillRect(0, hh3d, width3d, hh3d);
 
-    zBuffer.sort((a, b) => b.z - a.z);
+    zBuffer.sort((a, b) => b.order - a.order);
     for (let obj of zBuffer) {
         context3d.fillStyle = obj.color;
-        context3d.fillRect(obj.x, height3d * 0.5 - obj.height * 0.5, obj.width + 1, obj.height);
+        context3d.fillRect(hw3d + obj.x, hh3d - obj.z, obj.width, obj.height);
     }
-        */
     requestAnimationFrame(render)
 }
 </script>
