@@ -28,6 +28,7 @@ var hh3d = height3d * 0.5;
 //Perpective
 var tan = 0;
 var camZOffset = new Vector(0, 0);
+var zBuffer = [];
 
 window.onload = function() {
     canvas = document.getElementById("canvas");
@@ -47,8 +48,12 @@ window.onload = function() {
     lines.push(new Line(hw, hh, -141.42, 141.42, -100, 250, "yellow", player));
     lines.push(new Line(hw, hh, -100, 250, 0, 200, "yellow", player));
 
+    var line = new Line(hw, hh, 0, 200, 141.42, 141.42, "blue", player);
+    line.floor = 20;
+    line.ceiling = 20;
+
     lines.push(new Line(hw, hh, -141.42, 141.42, 0, 200, "yellow", player));
-    lines.push(new Line(hw, hh, 0, 200, 141.42, 141.42, "blue", player));
+    lines.push(line);
     lines.push(new Line(hw, hh, 141.42, 141.42, 200, 0, "red", player));
     lines.push(new Line(hw, hh, 200, 0, 141.42, -141.42, "brown", player));
     lines.push(new Line(hw, hh, 141.42, -141.42, 0, -200, "green", player));
@@ -56,8 +61,20 @@ window.onload = function() {
     lines.push(new Line(hw, hh, -141.42, -141.42, -200, 0, "white", player));
     lines.push(new Line(hw, hh, -200, 0, -141.42, 141.42, "orange", player));
 
+    var line = new Line(hw, hh, 0, 200, 30, 400, "red", player);
+    line.height = 200;
+    line.floor = 20;
+    line.ceiling = 20;
+    lines.push(line);
+
+    var line = new Line(hw, hh, 141.42, 141.42, 150, 400, "red", player);
+    line.height = 200;
+    line.floor = 20;
+    line.ceiling = 20;
+    lines.push(line);
+
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
-    camZOffset.z = 0;
+    camZOffset.z = 100;
 
     document.onkeydown = onKeyDown;
     document.onkeyup = onKeyUp;
@@ -100,7 +117,7 @@ function render(time) {
     player.update(dt);
     player.render(context);
     player.localRender(localContext);
-    var zBuffer = [];
+    zBuffer = [];
     for (let line of lines) {
         line.update(dt)
         line.render(context);
@@ -114,58 +131,12 @@ function render(time) {
             // Camera Z offset
             line.intersectA.z -= camZOffset.z;
             line.intersectB.z -= camZOffset.z;
+            line.intersectA.z += line.z;
+            line.intersectB.z += line.z;
 
-            var sxAUp = line.intersectA.x * (1 / line.intersectA.y) * tan * hw3d;
-            var szAUp = (line.intersectA.z + line.height * 0.5) * (1 / line.intersectA.y) * tan * hh3d;
-            var sxBUp = line.intersectB.x * (1 / line.intersectB.y) * tan * hw3d;
-            var szBUp = (line.intersectB.z + line.height * 0.5) * (1 / line.intersectB.y) * tan * hh3d;
-
-            var sxADown = line.intersectA.x * (1 / line.intersectA.y) * tan * hw3d;
-            var szADown = (line.intersectA.z - line.height * 0.5) * (1 / line.intersectA.y) * tan * hh3d;
-            var sxBDown = line.intersectB.x * (1 / line.intersectB.y) * tan * hw3d;
-            var szBDown = (line.intersectB.z - line.height * 0.5) * (1 / line.intersectB.y) * tan * hh3d;
-
-            context3d.beginPath();
-            context3d.moveTo(hw3d + sxADown, hh3d - szADown);
-            context3d.lineTo(hw3d + sxBDown, hh3d - szBDown);
-            context3d.lineWidth = 3;
-            context3d.strokeStyle = 'white';
-            context3d.stroke();
-
-            context3d.beginPath();
-            context3d.moveTo(hw3d + sxAUp, hh3d - szAUp);
-            context3d.lineTo(hw3d + sxBUp, hh3d - szBUp);
-            context3d.lineWidth = 3;
-            context3d.strokeStyle = 'white';
-            context3d.stroke();
-
-            context3d.beginPath();
-            context3d.moveTo(hw3d + sxADown, hh3d - szADown);
-            context3d.lineTo(hw3d + sxAUp, hh3d - szAUp);
-            context3d.lineWidth = 3;
-            context3d.strokeStyle = 'white';
-            context3d.stroke();
-
-            context3d.beginPath();
-            context3d.moveTo(hw3d + sxBDown, hh3d - szBDown);
-            context3d.lineTo(hw3d + sxBUp, hh3d - szBUp);
-            context3d.lineWidth = 3;
-            context3d.strokeStyle = 'white';
-            context3d.stroke();
-
-            // Shading
-            var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
-            var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
-            var yDiff = line.intersectB.y - line.intersectA.y;
-            var lineWidth = 2;
-            var min = Math.min(sxAUp, sxBUp);
-            var max = Math.max(sxAUp, sxBUp);
-            for (var i = min, step = 0; i < max; i += lineWidth, step += lineWidth) {
-                var top = upSlope * i + upSlope * -sxAUp + szAUp;
-                var bottom = downSlope * i + downSlope * -sxADown + szADown;
-                var depthOrder = line.intersectA.y + yDiff * (step / (max - min))
-                zBuffer.push({'height': top - bottom, 'x': i, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': depthOrder});
-            }
+            toScreen(line, line.floor, line.height - line.ceiling, line.floor == 0 && line.ceiling == 0);
+            toScreen(line, 0, line.floor, line.floor > 0);
+            toScreen(line, line.height - line.ceiling, line.height, line.ceiling > 0);
         }
     }
     
@@ -180,6 +151,38 @@ function render(time) {
         context3d.fillRect(hw3d + obj.x, hh3d - obj.z, obj.width, obj.height);
     }
     requestAnimationFrame(render)
+}
+
+function toScreen(line, down, up, draw) {
+    if (!draw) {
+        return;
+    }
+    var sxAUp = line.intersectA.x * (1 / line.intersectA.y) * tan * hw3d;
+    var szAUp = (line.intersectA.z + up) * (1 / line.intersectA.y) * tan * hh3d;
+    var sxBUp = line.intersectB.x * (1 / line.intersectB.y) * tan * hw3d;
+    var szBUp = (line.intersectB.z + up) * (1 / line.intersectB.y) * tan * hh3d;
+
+    var sxADown = line.intersectA.x * (1 / line.intersectA.y) * tan * hw3d;
+    var szADown = (line.intersectA.z + down) * (1 / line.intersectA.y) * tan * hh3d;
+    var sxBDown = line.intersectB.x * (1 / line.intersectB.y) * tan * hw3d;
+    var szBDown = (line.intersectB.z + down) * (1 / line.intersectB.y) * tan * hh3d;
+
+    var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
+    var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
+    var yDiff = line.intersectB.y - line.intersectA.y;
+    var xDiff = line.intersectB.x - line.intersectA.x;
+    var lineWidth = 2;
+    var min = Math.min(sxAUp, sxBUp);
+    var max = Math.max(sxAUp, sxBUp);
+    for (var i = min, step = 0; i < max; i += lineWidth, step += lineWidth) {
+        var top = upSlope * i + upSlope * -sxAUp + szAUp;
+        var bottom = downSlope * i + downSlope * -sxADown + szADown;
+
+        var percetage = step / (max - min);
+        var ySide = line.intersectA.y + yDiff * percetage;
+        var xSide = line.intersectA.x + xDiff * percetage;
+        zBuffer.push({'height': top - bottom, 'x': i, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': ySide * ySide + xSide * xSide});
+    }
 }
 </script>
 

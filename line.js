@@ -18,6 +18,9 @@ class Line {
         this.intersections = new Array(5);
         this.intersectionCount = 0;
         this.height = 200;
+        this.ceiling = 0;
+        this.floor = 0;
+        this.z = 0;
     }
 
     update(dt) {
