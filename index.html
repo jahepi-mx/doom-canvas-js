@@ -45,14 +45,10 @@ window.onload = function() {
     canvas3d.height = height3d;
     player = new Player(hw, hh);
 
-    lines.push(new Line(hw, hh, -141.42, 141.42, -100, 250, "yellow", player));
-    lines.push(new Line(hw, hh, -100, 250, 0, 200, "yellow", player));
-
+    lines.push(new Line(hw, hh, -141.42, 141.42, 0, 200, "yellow", player));
     var line = new Line(hw, hh, 0, 200, 141.42, 141.42, "blue", player);
     line.floor = 20;
     line.ceiling = 20;
-
-    lines.push(new Line(hw, hh, -141.42, 141.42, 0, 200, "yellow", player));
     lines.push(line);
     lines.push(new Line(hw, hh, 141.42, 141.42, 200, 0, "red", player));
     lines.push(new Line(hw, hh, 200, 0, 141.42, -141.42, "brown", player));
@@ -62,15 +58,13 @@ window.onload = function() {
     lines.push(new Line(hw, hh, -200, 0, -141.42, 141.42, "orange", player));
 
     var line = new Line(hw, hh, 0, 200, 30, 400, "red", player);
-    line.height = 200;
-    line.floor = 20;
-    line.ceiling = 20;
+    line.height = 160;
+    line.z = 20;
     lines.push(line);
 
     var line = new Line(hw, hh, 141.42, 141.42, 150, 400, "red", player);
-    line.height = 200;
-    line.floor = 20;
-    line.ceiling = 20;
+    line.height = 160;
+    line.z = 20;
     lines.push(line);
 
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
@@ -169,18 +163,26 @@ function toScreen(line, down, up, draw) {
 
     var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
     var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
-    var yDiff = line.intersectB.y - line.intersectA.y;
-    var xDiff = line.intersectB.x - line.intersectA.x;
     var lineWidth = 2;
     var min = Math.min(sxAUp, sxBUp);
     var max = Math.max(sxAUp, sxBUp);
+
+    var intersectA = line.intersectA;
+    var intersectB = line.intersectB;
+    if (sxBUp < sxAUp) {
+        intersectA = line.intersectB;
+        intersectB = line.intersectA;
+    }
+    var yDiff = intersectB.y - intersectA.y;
+    var xDiff = intersectB.x - intersectA.x;
+
     for (var i = min, step = 0; i < max; i += lineWidth, step += lineWidth) {
         var top = upSlope * i + upSlope * -sxAUp + szAUp;
         var bottom = downSlope * i + downSlope * -sxADown + szADown;
 
         var percetage = step / (max - min);
-        var ySide = line.intersectA.y + yDiff * percetage;
-        var xSide = line.intersectA.x + xDiff * percetage;
+        var ySide = intersectA.y + yDiff * percetage;
+        var xSide = intersectA.x + xDiff * percetage;
         zBuffer.push({'height': top - bottom, 'x': i, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': ySide * ySide + xSide * xSide});
     }
 }
