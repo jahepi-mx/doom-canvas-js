@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <script src="vector.js"></script>
 <script src="line.js"></script>
+<script src="segment.js"></script>
 <script src="player.js"></script>
 <script>
 var w = 500;
@@ -28,7 +29,10 @@ var hh3d = height3d * 0.5;
 //Perpective
 var tan = 0;
 var camZOffset = new Vector(0, 0);
+var camUp = camDown = false;
 var zBuffer = [];
+
+var segments = [];
 
 window.onload = function() {
     canvas = document.getElementById("canvas");
@@ -70,6 +74,24 @@ window.onload = function() {
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
     camZOffset.z = 100;
 
+    var segment = new Segment(player, 20, 180);
+    segment.add(0, 200);
+    segment.add(30, 400);
+    segment.add(150, 400);
+    segment.add(141.42, 141.42);
+    segments.push(segment);
+
+    segment = new Segment(player, 0, 200);
+    segment.add(-141.42, 141.42);
+    segment.add(0, 200);
+    segment.add(141.42, 141.42);
+    segment.add(200, 0);
+    segment.add(141.42, -141.42);
+    segment.add(0, -200);
+    segment.add(-141.42, -141.42);
+    segment.add(-200, 0);
+    segments.push(segment);
+
     document.onkeydown = onKeyDown;
     document.onkeyup = onKeyUp;
     render();
@@ -80,6 +102,8 @@ function onKeyDown(key) {
         case 65: player.left = true; break;
         case 68: player.right = true; break;
         case 87: player.up = true; break;
+        case 38: camUp = true; break;
+        case 40: camDown = true; break;
     }
 }
 
@@ -88,6 +112,8 @@ function onKeyUp(key) {
         case 65: player.left = false; break;
         case 68: player.right = false; break;
         case 87: player.up = false; break;
+        case 38: camUp = false; break;
+        case 40: camDown = false; break;
     }
 }
 
@@ -107,6 +133,9 @@ function render(time) {
         requestAnimationFrame(render);
         return;
     }
+
+    camZOffset.z += camUp ? 50 * dt : 0;
+    camZOffset.z += camDown ? -50 * dt : 0;
 
     player.update(dt);
     player.render(context);
@@ -131,6 +160,29 @@ function render(time) {
             toScreen(line, line.floor, line.height - line.ceiling, line.floor == 0 && line.ceiling == 0);
             toScreen(line, 0, line.floor, line.floor > 0);
             toScreen(line, line.height - line.ceiling, line.height, line.ceiling > 0);
+        }
+    }
+
+    for (let segment of segments) {
+        segment.update(dt);
+        segment.interpolate();
+        for (let y of segment.ys) {
+            var min = segment.mins[y];
+            var max = segment.maxs[y];
+            //localContext.fillStyle = "white";
+            //localContext.fillRect(hw + min, hh - y, max - min, 1);
+
+            var sxMin = min * (1 / y) * tan * hw3d;
+            var szMin = (-camZOffset.z + segment.down) * (1 / y) * tan * hh3d;
+            var sxMax = max * (1 / y) * tan * hw3d;
+            var szMax = (-camZOffset.z + segment.down) * (1 / y) * tan * hh3d;
+            zBuffer.push({'height': 2, 'x': sxMin, 'z': szMin, 'color': 'white', 'width': sxMax - sxMin, 'order': y});
+
+            var sxMin = min * (1 / y) * tan * hw3d;
+            var szMin = (-camZOffset.z + segment.up) * (1 / y) * tan * hh3d;
+            var sxMax = max * (1 / y) * tan * hw3d;
+            var szMax = (-camZOffset.z + segment.up) * (1 / y) * tan * hh3d;
+            zBuffer.push({'height': 2, 'x': sxMin, 'z': szMin, 'color': 'black', 'width': sxMax - sxMin, 'order': y});
         }
     }
     
@@ -183,7 +235,7 @@ function toScreen(line, down, up, draw) {
         var percetage = step / (max - min);
         var ySide = intersectA.y + yDiff * percetage;
         var xSide = intersectA.x + xDiff * percetage;
-        zBuffer.push({'height': top - bottom, 'x': i, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': ySide * ySide + xSide * xSide});
+        zBuffer.push({'height': top - bottom, 'x': i, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': ySide});
     }
 }
 </script>
