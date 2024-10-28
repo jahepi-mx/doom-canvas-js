@@ -220,7 +220,7 @@ function toScreen(line, down, up, draw) {
     var sxBDown = x * (1 / y) * tan * hw3d;
     var szBDown = (z + down) * (1 / y) * tan * hh3d;
 
-    var screenToLocal = (tan * hh3d * up) - (tan * hh3d * down);
+    var screenToLocal = tan * hh3d * (up - down);
     var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
     var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
     var lineWidth = 2;
