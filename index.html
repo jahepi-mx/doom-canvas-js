@@ -203,39 +203,46 @@ function toScreen(line, down, up, draw) {
     if (!draw) {
         return;
     }
-    var sxAUp = line.intersectA.x * (1 / line.intersectA.y) * tan * hw3d;
-    var szAUp = (line.intersectA.z + up) * (1 / line.intersectA.y) * tan * hh3d;
-    var sxBUp = line.intersectB.x * (1 / line.intersectB.y) * tan * hw3d;
-    var szBUp = (line.intersectB.z + up) * (1 / line.intersectB.y) * tan * hh3d;
+    var xD = line.intersectB.x - line.intersectA.x;
+    var yD = line.intersectB.y - line.intersectA.y;
+    var len = Math.abs(line.len * (xD * line.localDiff.x + yD * line.localDiff.y) / (line.localDiff.x * line.localDiff.x + line.localDiff.y * line.localDiff.y));
+    var xN = xD / len;
+    var yN = yD / len;
+    var unitLen = 5;
+    var i = 0, flag = 0;
+    var prevX, prevY, prevZ = null;
 
-    var sxADown = line.intersectA.x * (1 / line.intersectA.y) * tan * hw3d;
-    var szADown = (line.intersectA.z + down) * (1 / line.intersectA.y) * tan * hh3d;
-    var sxBDown = line.intersectB.x * (1 / line.intersectB.y) * tan * hw3d;
-    var szBDown = (line.intersectB.z + down) * (1 / line.intersectB.y) * tan * hh3d;
+    while (flag < 2) {
+        var x = line.intersectA.x + xN * i;
+        var y = line.intersectA.y + yN * i;
+        var z = line.intersectA.z;
+       
+        i = (i + unitLen) >= len ? len : i + unitLen;
+        flag = i >= len ? flag + 1 : flag;
+        if (prevX != null) {
+            var sxAUp = prevX * (1 / prevY) * tan * hw3d;
+            var szAUp = (prevZ + up) * (1 / prevY) * tan * hh3d;
+    	    var sxBUp = x * (1 / y) * tan * hw3d;
+    	    var szBUp = (z + up) * (1 / y) * tan * hh3d;
 
-    var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
-    var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
-    var lineWidth = 2;
-    var min = Math.min(sxAUp, sxBUp);
-    var max = Math.max(sxAUp, sxBUp);
+            var sxADown = prevX * (1 / prevY) * tan * hw3d;
+    	    var szADown = (prevZ + down) * (1 / prevY) * tan * hh3d;
+    	    var sxBDown = x * (1 / y) * tan * hw3d;
+    	    var szBDown = (z + down) * (1 / y) * tan * hh3d;
 
-    var intersectA = line.intersectA;
-    var intersectB = line.intersectB;
-    if (sxBUp < sxAUp) {
-        intersectA = line.intersectB;
-        intersectB = line.intersectA;
-    }
-    var yDiff = intersectB.y - intersectA.y;
-    var xDiff = intersectB.x - intersectA.x;
-
-    for (var i = min, step = 0; i < max; i += lineWidth, step += lineWidth) {
-        var top = upSlope * i + upSlope * -sxAUp + szAUp;
-        var bottom = downSlope * i + downSlope * -sxADown + szADown;
-
-        var percetage = step / (max - min);
-        var ySide = intersectA.y + yDiff * percetage;
-        var xSide = intersectA.x + xDiff * percetage;
-        zBuffer.push({'height': top - bottom, 'x': i, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': ySide});
+	        var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
+            var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
+            var lineWidth = 2;
+            var max = Math.max(sxAUp, sxBUp);
+            for (var e = Math.min(sxAUp, sxBUp); e < max; e += lineWidth) {
+                var top = upSlope * e + upSlope * -sxAUp + szAUp;
+                var bottom = downSlope * e + downSlope * -sxADown + szADown;
+                zBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': prevY});
+            } 
+        }
+        prevX = x;
+        prevY = y;
+        prevZ = z;
     }
 }
 </script>
