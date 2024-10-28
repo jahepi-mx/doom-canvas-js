@@ -203,47 +203,35 @@ function toScreen(line, down, up, draw) {
     if (!draw) {
         return;
     }
-    var xD = line.intersectB.x - line.intersectA.x;
-    var yD = line.intersectB.y - line.intersectA.y;
-    var len = Math.abs(line.len * (xD * line.localDiff.x + yD * line.localDiff.y) / (line.localDiff.x * line.localDiff.x + line.localDiff.y * line.localDiff.y));
-    var xN = xD / len;
-    var yN = yD / len;
-    var unitLen = 5;
-    var i = 0, flag = 0;
-    var prevX, prevY, prevZ = null;
+    var x = line.intersectA.x;
+    var y = line.intersectA.y;
+    var z = line.intersectA.z;
+    var prevX = line.intersectB.x;
+    var prevY = line.intersectB.y;
+    var prevZ = line.intersectB.z;
 
-    while (flag < 2) {
-        var x = line.intersectA.x + xN * i;
-        var y = line.intersectA.y + yN * i;
-        var z = line.intersectA.z;
-       
-        i = (i + unitLen) >= len ? len : i + unitLen;
-        flag = i >= len ? flag + 1 : flag;
-        if (prevX != null) {
-            var sxAUp = prevX * (1 / prevY) * tan * hw3d;
-            var szAUp = (prevZ + up) * (1 / prevY) * tan * hh3d;
-    	    var sxBUp = x * (1 / y) * tan * hw3d;
-    	    var szBUp = (z + up) * (1 / y) * tan * hh3d;
+    var sxAUp = prevX * (1 / prevY) * tan * hw3d;
+    var szAUp = (prevZ + up) * (1 / prevY) * tan * hh3d;
+    var sxBUp = x * (1 / y) * tan * hw3d;
+    var szBUp = (z + up) * (1 / y) * tan * hh3d;
 
-            var sxADown = prevX * (1 / prevY) * tan * hw3d;
-    	    var szADown = (prevZ + down) * (1 / prevY) * tan * hh3d;
-    	    var sxBDown = x * (1 / y) * tan * hw3d;
-    	    var szBDown = (z + down) * (1 / y) * tan * hh3d;
+    var sxADown = prevX * (1 / prevY) * tan * hw3d;
+    var szADown = (prevZ + down) * (1 / prevY) * tan * hh3d;
+    var sxBDown = x * (1 / y) * tan * hw3d;
+    var szBDown = (z + down) * (1 / y) * tan * hh3d;
 
-	        var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
-            var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
-            var lineWidth = 2;
-            var max = Math.max(sxAUp, sxBUp);
-            for (var e = Math.min(sxAUp, sxBUp); e < max; e += lineWidth) {
-                var top = upSlope * e + upSlope * -sxAUp + szAUp;
-                var bottom = downSlope * e + downSlope * -sxADown + szADown;
-                zBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': prevY});
-            } 
-        }
-        prevX = x;
-        prevY = y;
-        prevZ = z;
-    }
+    var screenToLocal = (tan * hh3d * up) - (tan * hh3d * down);
+    var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
+    var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
+    var lineWidth = 2;
+    var max = Math.max(sxAUp, sxBUp);
+    for (var e = Math.min(sxAUp, sxBUp); e < max; e += lineWidth) {
+        var top = upSlope * e + upSlope * -sxAUp + szAUp;
+        var bottom = downSlope * e + downSlope * -sxADown + szADown;
+        // From screen to local coords to get Y coord (depth)
+        var localY = screenToLocal / (top - bottom);
+        zBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': localY});
+    } 
 }
 </script>
 
