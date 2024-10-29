@@ -9,6 +9,8 @@ class Segment {
         this.ys = new Set();
         this.down = down;
         this.up = up;
+        this.min = Number.MAX_VALUE;
+        this.max = Number.MIN_VALUE;
     }
 
     add(x, y) {
@@ -26,6 +28,8 @@ class Segment {
         this.ys.clear();
         this.mins = [];
         this.maxs = [];
+        this.min = Number.MAX_VALUE;
+        this.max = Number.MIN_VALUE;
         var len = this.localPositions.length;
         for (var a = 0; a < len; a++) {
             var aPos = this.localPositions[a];
@@ -59,6 +63,8 @@ class Segment {
                     }
                     this.mins[y] = Math.min(x, this.mins[y]);
                     this.maxs[y] = Math.max(x, this.maxs[y]);
+                    this.min = Math.min(y, this.min);
+                    this.max = Math.max(y, this.max);
                 }
             }
         }
