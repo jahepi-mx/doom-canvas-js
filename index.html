@@ -30,7 +30,7 @@ var hh3d = height3d * 0.5;
 var tan = 0;
 var camZOffset = new Vector(0, 0);
 var camUp = camDown = false;
-var zBuffer = [];
+var yBuffer = [];
 
 var segments = [];
 
@@ -49,68 +49,32 @@ window.onload = function() {
     canvas3d.height = height3d;
     player = new Player(hw, hh);
 
-    lines.push(new Line(hw, hh, -141.42, 141.42, 0, 200, "yellow", player));
-    var line = new Line(hw, hh, 0, 200, 141.42, 141.42, "blue", player);
-    line.floor = 20;
-    line.ceiling = 20;
-    lines.push(line);
-    lines.push(new Line(hw, hh, 141.42, 141.42, 200, 0, "red", player));
-    lines.push(new Line(hw, hh, 200, 0, 141.42, -141.42, "brown", player));
-    lines.push(new Line(hw, hh, 141.42, -141.42, 0, -200, "green", player));
-    lines.push(new Line(hw, hh,  0, -200, -141.42, -141.42, "pink", player));
-    lines.push(new Line(hw, hh, -141.42, -141.42, -200, 0, "white", player));
-    lines.push(new Line(hw, hh, -200, 0, -141.42, 141.42, "orange", player));
-
-    var line = new Line(hw, hh, 0, 200, 30, 400, "red", player);
-    line.height = 160;
-    line.z = 20;
-    lines.push(line);
-
-    var line = new Line(hw, hh, 141.42, 141.42, 150, 400, "red", player);
-    line.height = 160;
-    line.z = 20;
-    lines.push(line);
-
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
     camZOffset.z = 100;
 
-    var segment = new Segment(player, 20, 180);
-    segment.add(0, 200);
-    segment.add(30, 400);
-    segment.add(150, 400);
-    segment.add(141.42, 141.42);
+    var segment = new Segment(player, camZOffset, 0, 200, tan, hw3d, hh3d, hw, hh);
+    segment.add(-141.42, 141.42, 0, 200, "yellow", 0, 0);
+    segment.add(0, 200, 141.42, 141.42, "blue", 20, 20);
+    segment.add(141.42, 141.42, 200, 0, "red", 0, 0);
+    segment.add(200, 0, 141.42, -141.42, "brown", 0, 0);
+    segment.add(141.42, -141.42, 0, -200, "green", 0, 0);
+    segment.add(0, -200, -141.42, -141.42, "pink", 0, 0);
+    segment.add(-141.42, -141.42, -200, 0, "white", 0, 0);
+    segment.add(-200, 0, -141.42, 141.42, "orange", 0, 0);
     segments.push(segment);
 
-    segment = new Segment(player, 0, 200);
-    segment.add(-141.42, 141.42);
-    segment.add(0, 200);
-    segment.add(141.42, 141.42);
-    segment.add(200, 0);
-    segment.add(141.42, -141.42);
-    segment.add(0, -200);
-    segment.add(-141.42, -141.42);
-    segment.add(-200, 0);
+    var segment = new Segment(player, camZOffset, 20, 160, tan, hw3d, hh3d, hw, hh);
+    segment.add(0, 200, 30, 400, "red", 0, 0);
+    segment.add(30, 400, null, null, null, null, null);
+    segment.add(150, 400, null, null, null, null, null);
+    segment.add(141.42, 141.42, 150, 400, "red", 0, 0);
     segments.push(segment);
 
-
-    var line = new Line(hw, hh, 300, 200, 320, 200, "red", player);
-    line.height = 240;
-    lines.push(line);
-    var line = new Line(hw, hh, 320, 200, 320, 180, "pink", player);
-    line.height = 240;
-    lines.push(line);
-    var line = new Line(hw, hh, 320, 180, 300, 180, "green", player);
-    line.height = 240;
-    lines.push(line);
-    var line = new Line(hw, hh, 300, 180, 300, 200, "blue", player);
-    line.height = 240;
-    lines.push(line);
-
-    segment = new Segment(player, 0, 240);
-    segment.add(300, 200);
-    segment.add(320, 200);
-    segment.add(320, 180);
-    segment.add(300, 180);
+    segment = new Segment(player, camZOffset, 0, 240, tan, hw3d, hh3d, hw, hh);
+    segment.add(300, 200, 320, 200, "red", 0, 0);
+    segment.add(320, 200, 320, 180, "pink", 0, 0);
+    segment.add(320, 180, 300, 180, "green", 0, 0);
+    segment.add(300, 180, 300, 200, "blue", 0, 0);
     segments.push(segment);
 
     document.onkeydown = onKeyDown;
@@ -161,107 +125,19 @@ function render(time) {
     player.update(dt);
     player.render(context);
     player.localRender(localContext);
-    zBuffer = [];
-    for (let line of lines) {
-        line.update(dt)
-        line.render(context);
-        line.localRender(localContext);
-        
-        if (line.hasIntersectionPoints()) {
-            localContext.fillStyle = "white";
-            localContext.fillRect(hw + line.intersectA.x - 3, hh - (line.intersectA.y + 3), 6, 6);
-            localContext.fillRect(hw + line.intersectB.x - 3, hh - (line.intersectB.y + 3), 6, 6);
-
-            // Camera Z offset
-            line.intersectA.z -= camZOffset.z;
-            line.intersectB.z -= camZOffset.z;
-            line.intersectA.z += line.z;
-            line.intersectB.z += line.z;
-
-            toScreen(line, line.floor, line.height - line.ceiling, line.floor == 0 && line.ceiling == 0);
-            toScreen(line, 0, line.floor, line.floor > 0);
-            toScreen(line, line.height - line.ceiling, line.height, line.ceiling > 0);
-        }
-    }
+    yBuffer = [];
 
     for (let segment of segments) {
         segment.update(dt);
-        segment.interpolate();
-        for (var y = segment.min; y < segment.max - 1; y++) {
-            var min = segment.mins[y];
-            var max = segment.maxs[y];
-            //localContext.fillStyle = "white";
-            //localContext.fillRect(hw + min, hh - y, max - min, 1);
-
-            var szMin2 = (-camZOffset.z + segment.down) * (1 / (y + 1)) * tan * hh3d;
-
-            var sxMin = min * (1 / y) * tan * hw3d;
-            var szMin = (-camZOffset.z + segment.down) * (1 / y) * tan * hh3d;
-            var sxMax = max * (1 / y) * tan * hw3d;
-            //var szMax = (-camZOffset.z + segment.down) * (1 / y) * tan * hh3d;
-            var height = szMin - szMin2;
-            if (szMin < szMin2) {
-                height = szMin2 - szMin;
-                szMin += height;
-            }
-            zBuffer.push({'height': height + 1, 'x': sxMin, 'z': szMin, 'color': 'white', 'width': sxMax - sxMin, 'order': y});
-
-            var szMin2 = (-camZOffset.z + segment.up) * (1 / (y + 1)) * tan * hh3d;
-
-            var sxMin = min * (1 / y) * tan * hw3d;
-            var szMin = (-camZOffset.z + segment.up) * (1 / y) * tan * hh3d;
-            var sxMax = max * (1 / y) * tan * hw3d;
-            //var szMax = (-camZOffset.z + segment.up) * (1 / y) * tan * hh3d;
-            var height = szMin - szMin2;
-            if (szMin < szMin2) {
-                height = szMin2 - szMin;
-                szMin += height;
-            }
-            zBuffer.push({'height': height + 1, 'x': sxMin, 'z': szMin, 'color': 'black', 'width': sxMax - sxMin, 'order': y});
-        }
+        segment.render(yBuffer, context, localContext);
     }
 
-    zBuffer.sort((a, b) => b.order - a.order);
-    for (let obj of zBuffer) {
+    yBuffer.sort((a, b) => b.order - a.order);
+    for (let obj of yBuffer) {
         context3d.fillStyle = obj.color;
         context3d.fillRect(hw3d + obj.x, hh3d - obj.z, obj.width, obj.height);
     }
     requestAnimationFrame(render)
-}
-
-function toScreen(line, down, up, draw) {
-    if (!draw) {
-        return;
-    }
-    var x = line.intersectA.x;
-    var y = line.intersectA.y;
-    var z = line.intersectA.z;
-    var prevX = line.intersectB.x;
-    var prevY = line.intersectB.y;
-    var prevZ = line.intersectB.z;
-
-    var sxAUp = prevX * (1 / prevY) * tan * hw3d;
-    var szAUp = (prevZ + up) * (1 / prevY) * tan * hh3d;
-    var sxBUp = x * (1 / y) * tan * hw3d;
-    var szBUp = (z + up) * (1 / y) * tan * hh3d;
-
-    var sxADown = prevX * (1 / prevY) * tan * hw3d;
-    var szADown = (prevZ + down) * (1 / prevY) * tan * hh3d;
-    var sxBDown = x * (1 / y) * tan * hw3d;
-    var szBDown = (z + down) * (1 / y) * tan * hh3d;
-
-    var screenToLocal = tan * hh3d * (up - down);
-    var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
-    var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
-    var lineWidth = 2;
-    var max = Math.max(sxAUp, sxBUp);
-    for (var e = Math.min(sxAUp, sxBUp); e < max; e += lineWidth) {
-        var top = upSlope * e + upSlope * -sxAUp + szAUp;
-        var bottom = downSlope * e + downSlope * -sxADown + szADown;
-        // From screen to local coords to get Y coord (depth)
-        var localY = screenToLocal / (top - bottom);
-        zBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': localY});
-    } 
 }
 </script>
 

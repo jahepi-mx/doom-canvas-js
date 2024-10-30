@@ -52,6 +52,12 @@ class Line {
         context.stroke();
     }
 
+    intersectLocalRender(context) {
+        context.fillStyle = "white";
+        context.fillRect(this.offset.x + this.intersectA.x - 3, this.offset.y - (this.intersectA.y + 3), 6, 6);
+        context.fillRect(this.offset.x + this.intersectB.x - 3, this.offset.y - (this.intersectB.y + 3), 6, 6);
+    }
+
     intersect(line) {
         var den1 = this.localPosition2.x - this.localPosition1.x;
         var den2 = line.localPosition2.x - line.localPosition1.x;
