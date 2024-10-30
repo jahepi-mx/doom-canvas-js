@@ -54,7 +54,7 @@ window.onload = function() {
 
     var segment = new Segment(player, camZOffset, 0, 200, tan, hw3d, hh3d, hw, hh);
     segment.add(-141.42, 141.42, 0, 200, "yellow", 0, 0);
-    segment.add(0, 200, 141.42, 141.42, "blue", 20, 20);
+    segment.add(0, 200, 141.42, 141.42, "cyan", 20, 20);
     segment.add(141.42, 141.42, 200, 0, "red", 0, 0);
     segment.add(200, 0, 141.42, -141.42, "brown", 0, 0);
     segment.add(141.42, -141.42, 0, -200, "green", 0, 0);
@@ -63,7 +63,7 @@ window.onload = function() {
     segment.add(-200, 0, -141.42, 141.42, "orange", 0, 0);
     segments.push(segment);
 
-    var segment = new Segment(player, camZOffset, 20, 160, tan, hw3d, hh3d, hw, hh);
+    segment = new Segment(player, camZOffset, 20, 160, tan, hw3d, hh3d, hw, hh);
     segment.add(0, 200, 30, 400, "red", 0, 0);
     segment.add(30, 400, null, null, null, null, null);
     segment.add(150, 400, null, null, null, null, null);
@@ -136,8 +136,10 @@ function render(time) {
     for (let obj of yBuffer) {
         context3d.fillStyle = obj.color;
         context3d.fillRect(hw3d + obj.x, hh3d - obj.z, obj.width, obj.height);
+        context3d.fillStyle = "rgba(0,0,0," + (obj.order / 400) + ")";
+        context3d.fillRect(hw3d + obj.x, hh3d - obj.z, obj.width, obj.height);
     }
-    requestAnimationFrame(render)
+    requestAnimationFrame(render);
 }
 </script>
 

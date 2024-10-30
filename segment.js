@@ -141,7 +141,7 @@ class Segment {
                     height = szMin2 - szMin;
                     szMin += height;
                 }
-                yBuffer.push({'height': height + 1, 'x': sxMin, 'z': szMin, 'color': 'white', 'width': sxMax - sxMin, 'order': y});
+                yBuffer.push({'height': height + 1, 'x': sxMin, 'z': szMin, 'color': 'blue', 'width': sxMax - sxMin, 'order': y});
             }
             if (this.hasCeiling) {
                 var szMin2 = (-this.camera.z + this.zUp) * (1 / (y + this.gap)) * tanH;
@@ -155,7 +155,7 @@ class Segment {
                     height = szMin2 - szMin;
                     szMin += height;
                 }
-                yBuffer.push({'height': height + 1, 'x': sxMin, 'z': szMin, 'color': 'black', 'width': sxMax - sxMin, 'order': y});
+                yBuffer.push({'height': height + 1, 'x': sxMin, 'z': szMin, 'color': 'blue', 'width': sxMax - sxMin, 'order': y});
             }
         }
     }
@@ -180,7 +180,8 @@ class Segment {
         var sxBDown = x * (1 / y) * tanW;
         var szBDown = (z + down) * (1 / y) * tanH;
     
-        var screenToLocal = tanH * (up - down);
+        //var screenToLocal1 = tanH * (up - down);
+        var screenToLocal = (prevZ + up) * tanH;
         var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
         var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
         var lineWidth = 2;
@@ -189,8 +190,8 @@ class Segment {
             var top = upSlope * e + upSlope * -sxAUp + szAUp;
             var bottom = downSlope * e + downSlope * -sxADown + szADown;
             // From screen to local coords to get Y coord (depth)
-            var localY = screenToLocal / (top - bottom);
-            yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': localY});
+            // var localY = screenToLocal1 / (top - bottom);
+            yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': screenToLocal / top});
         } 
     }
 }
