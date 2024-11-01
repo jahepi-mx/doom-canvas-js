@@ -52,29 +52,48 @@ window.onload = function() {
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
     camZOffset.z = 100;
 
-    var segment = new Segment(player, camZOffset, 0, 200, tan, hw3d, hh3d, hw, hh);
-    segment.add(-141.42, 141.42, 0, 200, "yellow", 0, 0);
-    segment.add(0, 200, 141.42, 141.42, "cyan", 20, 20);
-    segment.add(141.42, 141.42, 200, 0, "red", 0, 0);
-    segment.add(200, 0, 141.42, -141.42, "brown", 0, 0);
-    segment.add(141.42, -141.42, 0, -200, "green", 0, 0);
-    segment.add(0, -200, -141.42, -141.42, "pink", 0, 0);
-    segment.add(-141.42, -141.42, -200, 0, "white", 0, 0);
-    segment.add(-200, 0, -141.42, 141.42, "orange", 0, 0);
+    var segment = new Segment(player, camZOffset, 0, 300, tan, hw3d, hh3d, hw, hh);
+    segment.add(-300, 150, -250, 200, "yellow", 0, 0);
+    segment.add(-250, 200, 250, 200, "cyan", 0, 0);
+    segment.add(250, 200, 300, 150, "red", 0, 0);
+    segment.add(300, 150, 300, -150, "brown", 120, 0);
+    segment.add(300, -150, 250, -200, "green", 0, 0);
+    segment.add(250, -200, -250, -200, "pink", 0, 0);
+    segment.add(-250, -200, -300, -150, "white", 0, 0);
+    segment.add(-300, -150, -300, 150, "orange", 0, 0);
     segments.push(segment);
 
-    segment = new Segment(player, camZOffset, 20, 160, tan, hw3d, hh3d, hw, hh);
-    segment.add(0, 200, 30, 400, "red", 0, 0);
-    segment.add(30, 400, null, null, null, null, null);
-    segment.add(150, 400, null, null, null, null, null);
-    segment.add(141.42, 141.42, 150, 400, "red", 0, 0);
+    segment = new Segment(player, camZOffset, 0, 40, tan, hw3d, hh3d, hw, hh);
+    segment.add(180, 20, 200, 40, "yellow", 0, 0);
+    segment.add(200, 40, 220, 40, "cyan", 0, 0);
+    segment.add(220, 40, 220, -40, "red", 0, 0);
+    segment.add(220, -40, 200, -40, "brown", 0, 0);
+    segment.add(200, -40, 180, -20, "green", 0, 0);
+    segment.add(180, -20, 180, 20, "pink", 0, 0);
+    segment.hasFloor = false;
     segments.push(segment);
 
-    segment = new Segment(player, camZOffset, 0, 240, tan, hw3d, hh3d, hw, hh);
-    segment.add(300, 200, 320, 200, "red", 0, 0);
-    segment.add(320, 200, 320, 180, "pink", 0, 0);
-    segment.add(320, 180, 300, 180, "green", 0, 0);
-    segment.add(300, 180, 300, 200, "blue", 0, 0);
+    segment = new Segment(player, camZOffset, 0, 80, tan, hw3d, hh3d, hw, hh);
+    segment.add(220, 60, 260, 60, "yellow", 0, 0);
+    segment.add(260, 60, 260, -60, "cyan", 0, 0);
+    segment.add(260, -60, 220, -60, "red", 0, 0);
+    segment.add(220, -60, 220, 60, "brown", 0, 0);
+    segment.hasFloor = false;
+    segments.push(segment);
+
+    segment = new Segment(player, camZOffset, 0, 120, tan, hw3d, hh3d, hw, hh);
+    segment.add(260, 80, 300, 80, "yellow", 0, 0);
+    segment.add(300, 80, null, null, "cyan", 0, 0);
+    segment.add(300, -80, 260, -80, "red", 0, 0);
+    segment.add(260, -80, 260, 80, "brown", 0, 0);
+    segment.hasFloor = false;
+    segments.push(segment);
+
+    segment = new Segment(player, camZOffset, 120, 180, tan, hw3d, hh3d, hw, hh);
+    segment.add(300, 150, 650, 150, "yellow", 0, 0);
+    segment.add(650, 150, 650, -150, "cyan", 20, 0);
+    segment.add(650, -150, 300, -150, "red", 0, 0);
+    segment.add(300, -150, null, null, "brown", 0, 0);
     segments.push(segment);
 
     document.onkeydown = onKeyDown;

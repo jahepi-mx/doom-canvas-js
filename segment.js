@@ -126,8 +126,8 @@ class Segment {
         for (var y = this.min; y <= this.max - this.gap; y += this.gap) {
             var min = this.mins[y];
             var max = this.maxs[y];
-            //localContext.fillStyle = "white";
-            //localContext.fillRect(hw + min, hh - y, max - min, 1);
+            localContext.fillStyle = "white";
+            localContext.fillRect(hw + min, hh - y, max - min, 1);
 
             if (this.hasFloor) {
                 var szMin2 = (-this.camera.z + this.zBottom) * (1 / (y + this.gap)) * tanH;
