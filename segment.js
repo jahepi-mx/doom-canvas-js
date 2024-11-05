@@ -6,7 +6,6 @@ class Segment {
         this.localPositions = [];
         this.mins = [];
         this.maxs = [];
-        this.ys = new Set();
         this.zBottom = zBottom;
         this.height = height;
         this.zUp = zBottom + height;
@@ -22,6 +21,14 @@ class Segment {
         this.hh3d = hh3d;
         this.hw = hw;
         this.hh = hh;
+
+        // Texture
+        this.texmins = new Map();
+        this.texmaxs = new Map();
+        this.ytexmin = Number.MAX_VALUE;
+        this.ytexmax = Number.MIN_VALUE;
+        this.texcolors = [];
+        this.texcolorsints = [];
     }
 
     add(x1, y1, x2, y2, color, floor, ceiling) {
@@ -45,7 +52,6 @@ class Segment {
     }
 
     interpolate() {
-        this.ys.clear();
         this.mins = [];
         this.maxs = [];
         this.min = Number.MAX_VALUE;
@@ -71,10 +77,9 @@ class Segment {
             for (var y = yA; y <= yB; y++) {
                 // p.y + d.y*? = t
                 // ? = (t - p.y) / d.y
-                if (yDiff > 0 && y >= 0) {
+                if (yDiff != 0 && y >= 0) {
                     var ratio = (y - yA) / yDiff;
                     var x = xA + ratio * xDiff;
-                    this.ys.add(y);
                     if (this.mins[y] == undefined) {
                         this.mins[y] = x;
                     }
@@ -120,7 +125,7 @@ class Segment {
         if (!hasIntersections) {
             return;
         }
-        // Draws floor and ceiling of the segment
+        // Draws a texture on the floor and ceiling of the segment
         var tanH = this.tan * this.hh3d;
         var tanW = this.tan * this.hw3d;
         for (var y = this.min; y <= this.max - this.gap; y += this.gap) {
@@ -128,35 +133,51 @@ class Segment {
             var max = this.maxs[y];
             localContext.fillStyle = "white";
             localContext.fillRect(hw + min, hh - y, max - min, 1);
+            /* Texture mapping */
+            var xMinScreen = min * (1 / y) * tanW;
+            var xMaxScreen = max * (1 / y) * tanW;
+            var zMinUp = 0, heightUp = 0, zMinBottom = 0, heightBottom = 0;
+            xMinScreen = xMinScreen < -this.hw3d ? -this.hw3d : xMinScreen;
+            xMaxScreen = xMaxScreen > this.hw3d ? this.hw3d : xMaxScreen;
+            var prevColorInt = null;
+            var prevColor = null;
+            var prevSize = 0;
+            var prevX = xMinScreen;
 
-            if (this.hasFloor) {
-                var szMin2 = (-this.camera.z + this.zBottom) * (1 / (y + this.gap)) * tanH;
-
-                var sxMin = min * (1 / y) * tanW;
-                var szMin = (-this.camera.z + this.zBottom) * (1 / y) * tanH;
-                var sxMax = max * (1 / y) * tanW;
-                //var szMax = (-this.camera.z + this.zBottom) * (1 / y) * tanH;
-                var height = szMin - szMin2;
-                if (szMin < szMin2) {
-                    height = szMin2 - szMin;
-                    szMin += height;
+            for (var xScreen = xMinScreen; xScreen <= xMaxScreen; xScreen++) {
+                var x = xScreen / ((1 / y) * tanW);
+                var world = this.player.convertToWorld(x, y);
+                //ceiling
+                zMinUp = (-this.camera.z + this.zUp) * (1 / y) * tanH;
+                var zMaxUp = (-this.camera.z + this.zUp) * (1 / (y + this.gap)) * tanH;
+                heightUp = zMinUp - zMaxUp;
+                if (zMinUp < zMaxUp) {
+                    heightUp = zMaxUp - zMinUp;
+                    zMinUp += heightUp;
                 }
-                yBuffer.push({'height': height + 1, 'x': sxMin, 'z': szMin, 'color': 'blue', 'width': sxMax - sxMin, 'order': y});
-            }
-            if (this.hasCeiling) {
-                var szMin2 = (-this.camera.z + this.zUp) * (1 / (y + this.gap)) * tanH;
-
-                var sxMin = min * (1 / y) * tanW;
-                var szMin = (-this.camera.z + this.zUp) * (1 / y) * tanH;
-                var sxMax = max * (1 / y) * tanW;
-                //var szMax = (-this.camera.z + this.zUp) * (1 / y) * tanH;
-                var height = szMin - szMin2;
-                if (szMin < szMin2) {
-                    height = szMin2 - szMin;
-                    szMin += height;
+                //floor
+                zMinBottom = (-this.camera.z + this.zBottom) * (1 / y) * tanH;
+                var zMaxBottom = (-this.camera.z + this.zBottom) * (1 / (y + this.gap)) * tanH;
+                heightBottom = zMinBottom - zMaxBottom;
+                if (zMinBottom < zMaxBottom) {
+                    heightBottom = zMaxBottom - zMinBottom;
+                    zMinBottom += heightBottom;
                 }
-                yBuffer.push({'height': height + 1, 'x': sxMin, 'z': szMin, 'color': 'blue', 'width': sxMax - sxMin, 'order': y});
+                var index = (world.y + 1000) * 10000 + world.x + 1000;
+                var color = this.texcolors[index];
+                var colorint = this.texcolorsints[index];
+                if (prevColorInt != colorint && xScreen > xMinScreen) {
+                    if (this.hasCeiling) yBuffer.push({'height': heightUp + 1, 'x': prevX, 'z': zMinUp, 'color': prevColor, 'width': prevSize + 1, 'order': y});
+                    if (this.hasFloor) yBuffer.push({'height': heightBottom + 1, 'x': prevX, 'z': zMinBottom, 'color': prevColor, 'width': prevSize + 1, 'order': y});
+                    prevX = xScreen;
+                    prevSize = 0;
+                }
+                prevSize++;
+                prevColorInt = colorint;
+                prevColor = color;
             }
+            if (this.hasCeiling) yBuffer.push({'height': heightUp + 1, 'x': prevX, 'z': zMinUp, 'color': prevColor, 'width': prevSize + 1, 'order': y});
+            if (this.hasFloor) yBuffer.push({'height': heightBottom + 1, 'x': prevX, 'z': zMinBottom, 'color': prevColor, 'width': prevSize + 1, 'order': y});
         }
     }
 
@@ -193,5 +214,53 @@ class Segment {
             // var localY = screenToLocal1 / (top - bottom);
             yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': screenToLocal / top});
         } 
+    }
+
+    texinterpolate() {
+        var len = this.positions.length;
+        for (var a = 0; a < len; a++) {
+            var aPos = this.positions[a];
+            var bPos = this.positions[(a + 1) % len];
+            var xA = parseInt(aPos.x);
+            var yA = parseInt(aPos.y);
+            var xB = parseInt(bPos.x);
+            var yB = parseInt(bPos.y);
+            if (yB < yA) {
+                var tmpX = xA;
+                var tmpY = yA;
+                xA = xB;
+                yA = yB;
+                xB = tmpX;
+                yB = tmpY;
+            }
+            var xDiff = xB - xA;
+            var yDiff = yB - yA;
+            for (var y = yA; y <= yB; y++) {
+                if (yDiff != 0) {
+                    var ratio = (y - yA) / yDiff;
+                    var x = xA + ratio * xDiff;
+                    if (!this.texmins.has(y)) {
+                        this.texmins.set(y, x);
+                    }
+                    if (!this.texmaxs.has(y)) {
+                        this.texmaxs.set(y, x);
+                    }
+                    this.texmins.set(y, Math.min(x, this.texmins.get(y)));
+                    this.texmaxs.set(y, Math.max(x, this.texmaxs.get(y)));
+                    this.ytexmin = Math.min(y, this.ytexmin);
+                    this.ytexmax = Math.max(y, this.ytexmax);
+                }
+            }
+        }
+        var colors = ["red", "red", "red", "red", "black", "black", "black", "black", "black", "black"];
+        var colorsints = [1, 1, 1, 1, 2, 2, 2, 2, 2, 2];
+        for (var y = this.ytexmin, inc = 0; y <= this.ytexmax; y++, inc++) {
+            var xmin = this.texmins.get(y);
+            var xmax = this.texmaxs.get(y);
+            for (var x = xmin; x <= xmax; x++) {
+                this.texcolors[(y + 1000) * 10000 + x + 1000] = colors[inc % colors.length];
+                this.texcolorsints[(y + 1000) * 10000 + x + 1000] = colorsints[inc % colors.length];
+            }
+        }
     }
 }

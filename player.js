@@ -114,4 +114,14 @@ class Player {
         var ny = x * this.invXAxis.y + y * this.invYAxis.y;
         return new Vector(nx, ny);
     }
+
+    convertToWorld(x, y) {
+        //x.x * x, x.y * x
+        //y.x * y, y.y * y
+        var nx = x * this.xAxis.x + y * this.yAxis.x;
+        var ny = x * this.xAxis.y + y * this.yAxis.y;
+        nx += this.position.x;
+        ny += this.position.y;
+        return new Vector(parseInt(nx), parseInt(ny));
+    }
 }
