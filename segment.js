@@ -77,7 +77,7 @@ class Segment {
             for (var y = yA; y <= yB; y++) {
                 // p.y + d.y*? = t
                 // ? = (t - p.y) / d.y
-                if (yDiff != 0 && y >= 0) {
+                if (yDiff != 0 && y >= 1) {
                     var ratio = (y - yA) / yDiff;
                     var x = xA + ratio * xDiff;
                     if (this.mins[y] == undefined) {
@@ -111,64 +111,53 @@ class Segment {
                 line.intersectA.z += line.z;
                 line.intersectB.z += line.z;
     
-                if (line.floor == 0 && line.ceiling == 0) {
-                    this.projectLine(yBuffer, line, 0, line.height);
-                }
-                if (line.floor > 0) {
-                    this.projectLine(yBuffer, line, 0, line.floor);
-                }
-                if (line.ceiling > 0) {
-                    this.projectLine(yBuffer, line, line.height - line.ceiling, line.height);
-                }
+                if (line.floor == 0 && line.ceiling == 0) this.projectLine(yBuffer, line, 0, line.height);
+                if (line.floor > 0) this.projectLine(yBuffer, line, 0, line.floor);
+                if (line.ceiling > 0) this.projectLine(yBuffer, line, line.height - line.ceiling, line.height);
             }
         }
         if (!hasIntersections) {
             return;
         }
-        // Draws a texture on the floor and ceiling of the segment
+        if (this.hasCeiling) this.drawSurfaceTexture(this.zUp);
+        if (this.hasFloor) this.drawSurfaceTexture(this.zBottom);
+    }
+    /* The idea behind this is to get the Z screen coordinates, which represent the screen height. We then loop through that range, retrieving the Y world coordinate (depth) and the X world coordinate, 
+       and convert them to X screen coordinates. As we loop through this range, we convert each pixel back to world coordinates to get the color of the texture. */
+    drawSurfaceTexture(height) {
         var tanH = this.tan * this.hh3d;
         var tanW = this.tan * this.hw3d;
-        for (var y = this.min; y <= this.max - this.gap; y += this.gap) {
+        var zScreenMinA = (-this.camera.z + height) * (1 / this.min) * tanH;
+        var zScreenMaxA = (-this.camera.z + height) * (1 / this.max) * tanH;
+        zScreenMinA = zScreenMinA < -this.hh3d ? -this.hh3d : zScreenMinA;
+        zScreenMinA = zScreenMinA > this.hh3d ? this.hh3d : zScreenMinA;
+        zScreenMaxA = zScreenMaxA < -this.hh3d ? -this.hh3d : zScreenMaxA;
+        zScreenMaxA = zScreenMaxA > this.hh3d ? this.hh3d : zScreenMaxA;
+        var maxz = Math.max(zScreenMinA, zScreenMaxA);
+        for (var sz = Math.min(zScreenMinA, zScreenMaxA); sz <= maxz; sz++) {
+            var y = parseInt((-this.camera.z + height) * tanH * (1 / sz));
             var min = this.mins[y];
             var max = this.maxs[y];
-            localContext.fillStyle = "white";
-            localContext.fillRect(hw + min, hh - y, max - min, 1);
-            /* Texture mapping */
+            //localContext.fillStyle = "white";
+            //localContext.fillRect(hw + min, hh - y, max - min, 1);
             var xMinScreen = min * (1 / y) * tanW;
             var xMaxScreen = max * (1 / y) * tanW;
-            var zMinUp = 0, heightUp = 0, zMinBottom = 0, heightBottom = 0;
             xMinScreen = xMinScreen < -this.hw3d ? -this.hw3d : xMinScreen;
+            xMinScreen = xMinScreen > this.hw3d ? this.hw3d : xMinScreen;
+            xMaxScreen = xMaxScreen < -this.hw3d ? -this.hw3d : xMaxScreen;
             xMaxScreen = xMaxScreen > this.hw3d ? this.hw3d : xMaxScreen;
             var prevColorInt = null;
             var prevColor = null;
             var prevSize = 0;
             var prevX = xMinScreen;
-
             for (var xScreen = xMinScreen; xScreen <= xMaxScreen; xScreen++) {
                 var x = xScreen / ((1 / y) * tanW);
                 var world = this.player.convertToWorld(x, y);
-                //ceiling
-                zMinUp = (-this.camera.z + this.zUp) * (1 / y) * tanH;
-                var zMaxUp = (-this.camera.z + this.zUp) * (1 / (y + this.gap)) * tanH;
-                heightUp = zMinUp - zMaxUp;
-                if (zMinUp < zMaxUp) {
-                    heightUp = zMaxUp - zMinUp;
-                    zMinUp += heightUp;
-                }
-                //floor
-                zMinBottom = (-this.camera.z + this.zBottom) * (1 / y) * tanH;
-                var zMaxBottom = (-this.camera.z + this.zBottom) * (1 / (y + this.gap)) * tanH;
-                heightBottom = zMinBottom - zMaxBottom;
-                if (zMinBottom < zMaxBottom) {
-                    heightBottom = zMaxBottom - zMinBottom;
-                    zMinBottom += heightBottom;
-                }
                 var index = (world.y + 1000) * 10000 + world.x + 1000;
                 var color = this.texcolors[index];
                 var colorint = this.texcolorsints[index];
                 if (prevColorInt != colorint && xScreen > xMinScreen) {
-                    if (this.hasCeiling) yBuffer.push({'height': heightUp + 1, 'x': prevX, 'z': zMinUp, 'color': prevColor, 'width': prevSize + 1, 'order': y});
-                    if (this.hasFloor) yBuffer.push({'height': heightBottom + 1, 'x': prevX, 'z': zMinBottom, 'color': prevColor, 'width': prevSize + 1, 'order': y});
+                    yBuffer.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1, 'order': y});
                     prevX = xScreen;
                     prevSize = 0;
                 }
@@ -176,8 +165,7 @@ class Segment {
                 prevColorInt = colorint;
                 prevColor = color;
             }
-            if (this.hasCeiling) yBuffer.push({'height': heightUp + 1, 'x': prevX, 'z': zMinUp, 'color': prevColor, 'width': prevSize + 1, 'order': y});
-            if (this.hasFloor) yBuffer.push({'height': heightBottom + 1, 'x': prevX, 'z': zMinBottom, 'color': prevColor, 'width': prevSize + 1, 'order': y});
+            yBuffer.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1, 'order': y});
         }
     }
 
@@ -216,7 +204,7 @@ class Segment {
         } 
     }
 
-    texinterpolate() {
+    texturizeFloorCeiling() {
         var len = this.positions.length;
         for (var a = 0; a < len; a++) {
             var aPos = this.positions[a];

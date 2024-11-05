@@ -21,8 +21,8 @@ var context3d = null;
 var lastTime = 0;
 var player = null;
 var lines = [];
-var width3d = 400;
-var height3d = 400;
+var width3d = 350;
+var height3d = 350;
 var hw3d = width3d * 0.5;
 var hh3d = height3d * 0.5;
 
@@ -61,7 +61,7 @@ window.onload = function() {
     segment.add(250, -200, -250, -200, "pink", 0, 0);
     segment.add(-250, -200, -300, -150, "white", 0, 0);
     segment.add(-300, -150, -300, 150, "orange", 0, 0);
-    segment.texinterpolate();
+    segment.texturizeFloorCeiling();
     segments.push(segment);
 
     segment = new Segment(player, camZOffset, 0, 40, tan, hw3d, hh3d, hw, hh);
@@ -72,7 +72,7 @@ window.onload = function() {
     segment.add(200, -40, 180, -20, "green", 0, 0);
     segment.add(180, -20, 180, 20, "pink", 0, 0);
     segment.hasFloor = false;
-    segment.texinterpolate();
+    segment.texturizeFloorCeiling();
     segments.push(segment);
 
     segment = new Segment(player, camZOffset, 0, 80, tan, hw3d, hh3d, hw, hh);
@@ -81,7 +81,7 @@ window.onload = function() {
     segment.add(260, -60, 220, -60, "red", 0, 0);
     segment.add(220, -60, 220, 60, "brown", 0, 0);
     segment.hasFloor = false;
-    segment.texinterpolate();
+    segment.texturizeFloorCeiling();
     segments.push(segment);
 
     segment = new Segment(player, camZOffset, 0, 120, tan, hw3d, hh3d, hw, hh);
@@ -90,15 +90,15 @@ window.onload = function() {
     segment.add(300, -80, 260, -80, "red", 0, 0);
     segment.add(260, -80, 260, 80, "brown", 0, 0);
     segment.hasFloor = false;
-    segment.texinterpolate();
+    segment.texturizeFloorCeiling();
     segments.push(segment);
 
     segment = new Segment(player, camZOffset, 120, 180, tan, hw3d, hh3d, hw, hh);
     segment.add(300, 150, 650, 150, "yellow", 0, 0);
     segment.add(650, 150, 650, -150, "cyan", 20, 0);
     segment.add(650, -150, 300, -150, "red", 0, 0);
-    segment.add(300, -150, null, null, "brown", 0, 0);
-    segment.texinterpolate();
+    segment.add(300, -150, 300, 150, "brown", 0, 20);
+    segment.texturizeFloorCeiling();
     segments.push(segment);
 
     document.onkeydown = onKeyDown;
@@ -155,7 +155,7 @@ function render(time) {
         segment.update(dt);
         segment.render(yBuffer, context, localContext);
     }
-
+    //console.log(yBuffer.length);
     yBuffer.sort((a, b) => b.order - a.order);
     for (let obj of yBuffer) {
         context3d.fillStyle = obj.color;
