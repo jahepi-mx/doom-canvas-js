@@ -157,7 +157,7 @@ class Segment {
                 var color = this.texcolors[index];
                 var colorint = this.texcolorsints[index];
                 if (prevColorInt != colorint && xScreen > xMinScreen) {
-                    yBuffer.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1, 'order': y});
+                    yBuffer.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1, 'order': y, 'img': 0});
                     prevX = xScreen;
                     prevSize = 0;
                 }
@@ -165,7 +165,7 @@ class Segment {
                 prevColorInt = colorint;
                 prevColor = color;
             }
-            yBuffer.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1, 'order': y});
+            yBuffer.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1, 'order': y, 'img': 0});
         }
     }
 
@@ -188,6 +188,26 @@ class Segment {
         var szADown = (prevZ + down) * (1 / prevY) * tanH;
         var sxBDown = x * (1 / y) * tanW;
         var szBDown = (z + down) * (1 / y) * tanH;
+
+        // Texture
+        var intersA = line.intersectA;
+        var intersB = line.intersectB;
+        if (sxAUp < sxBUp) {
+            intersA = line.intersectB;
+            intersB = line.intersectA;
+        }
+        var diffX1 = intersB.x - intersA.x;
+        var diffY1 = intersB.y - intersA.y;
+        var diffX2 = line.localPosition1.x - intersA.x;
+        var diffY2 = line.localPosition1.y - intersA.y;
+        var diffX3 = line.localPosition2.x - intersA.x;
+        var diffY3 = line.localPosition2.y - intersA.y;
+        var dot1 = diffX1 * diffX2 + diffY1 * diffY2 <= 0 ? diffX2 * line.localDiff.x + diffY2 * line.localDiff.y : 0;
+        dot1 = diffX1 * diffX3 + diffY1 * diffY3 <= 0 ? diffX3 * line.localDiff.x + diffY3 * line.localDiff.y : dot1;
+        var dot2 = diffX1 * line.localDiff.x + diffY1 * line.localDiff.y;
+        var dotProj = line.localDiff.x * line.localDiff.x + line.localDiff.y * line.localDiff.y;
+        var fromRatio = Math.abs(dot1 / dotProj);
+        var ratio = Math.abs(dot2 / dotProj);
     
         //var screenToLocal1 = tanH * (up - down);
         var screenToLocal = (prevZ + up) * tanH;
@@ -195,12 +215,15 @@ class Segment {
         var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
         var lineWidth = 2;
         var max = Math.max(sxAUp, sxBUp);
-        for (var e = Math.min(sxAUp, sxBUp); e < max; e += lineWidth) {
+        var min = Math.min(sxAUp, sxBUp);
+        var dist = max - min;
+        for (var e = min; e < max; e += lineWidth) {
             var top = upSlope * e + upSlope * -sxAUp + szAUp;
             var bottom = downSlope * e + downSlope * -sxADown + szADown;
             // From screen to local coords to get Y coord (depth)
             // var localY = screenToLocal1 / (top - bottom);
-            yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': screenToLocal / top});
+            var texRatio = fromRatio + ((e - min) / dist) * ratio; 
+            yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': screenToLocal / top, 'img': 1, 'texratio': texRatio});
         } 
     }
 

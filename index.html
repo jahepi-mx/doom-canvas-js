@@ -21,10 +21,11 @@ var context3d = null;
 var lastTime = 0;
 var player = null;
 var lines = [];
-var width3d = 350;
-var height3d = 350;
+var width3d = 300;
+var height3d = 300;
 var hw3d = width3d * 0.5;
 var hh3d = height3d * 0.5;
+var image = null;
 
 //Perpective
 var tan = 0;
@@ -101,8 +102,15 @@ window.onload = function() {
     segment.texturizeFloorCeiling();
     segments.push(segment);
 
+    image = new Image(50, 50);
+    image.onload = onLoadImage;
+    image.src = "wall.png";
+
     document.onkeydown = onKeyDown;
     document.onkeyup = onKeyUp;
+}
+
+function onLoadImage() {
     render();
 }
         
@@ -129,7 +137,7 @@ function onKeyUp(key) {
 function render(time) {
     var dt = (time - lastTime) / 1000;
     var fps = 1 / dt;
-    console.log(fps);
+    //console.log(fps);
     context.imageSmoothingEnabled = false;
     context.clearRect(0, 0, w, h);
     localContext.imageSmoothingEnabled = false;
@@ -158,11 +166,20 @@ function render(time) {
     //console.log(yBuffer.length);
     yBuffer.sort((a, b) => b.order - a.order);
     for (let obj of yBuffer) {
-        context3d.fillStyle = obj.color;
-        context3d.fillRect(hw3d + obj.x, hh3d - obj.z, obj.width, obj.height);
+        if (obj.img == 1) {
+            context3d.drawImage(image, obj.texratio * image.width, 0, 1, image.height, hw3d + obj.x, hh3d - obj.z, obj.width, obj.height)
+        } else {
+            context3d.fillStyle = obj.color;
+            context3d.fillRect(hw3d + obj.x, hh3d - obj.z, obj.width, obj.height);
+        }
         //context3d.fillStyle = "rgba(0,0,0," + (obj.order / 400) + ")";
         //context3d.fillRect(hw3d + obj.x, hh3d - obj.z, obj.width, obj.height);
     }
+
+    context3d.font = "14px Arial";
+    context3d.fillStyle = "#74ff33";
+    context3d.fillText(parseInt(fps), width3d - 20, 20);
+
     requestAnimationFrame(render);
 }
 </script>

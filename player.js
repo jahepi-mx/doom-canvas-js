@@ -3,7 +3,7 @@ class Player {
     constructor(offsetx, offsety) {
         this.toRadians = Math.PI / 180;
         this.toDegrees = 180 / Math.PI;
-        this.degrees = 90;
+        this.degrees = 0;
         this.position = new Vector(0, 0);
         this.velocity = new Vector(200, 120);
         this.left = this.right = this.up = false;
