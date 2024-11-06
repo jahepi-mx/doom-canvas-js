@@ -204,26 +204,23 @@ class Segment {
         var diffY3 = line.localPosition2.y - intersA.y;
         var dot1 = diffX1 * diffX2 + diffY1 * diffY2 <= 0 ? diffX2 * line.localDiff.x + diffY2 * line.localDiff.y : 0;
         dot1 = diffX1 * diffX3 + diffY1 * diffY3 <= 0 ? diffX3 * line.localDiff.x + diffY3 * line.localDiff.y : dot1;
-        var dot2 = diffX1 * line.localDiff.x + diffY1 * line.localDiff.y;
         var dotProj = line.localDiff.x * line.localDiff.x + line.localDiff.y * line.localDiff.y;
         var fromRatio = Math.abs(dot1 / dotProj);
-        var ratio = Math.abs(dot2 / dotProj);
     
-        //var screenToLocal1 = tanH * (up - down);
         var screenToLocal = (prevZ + up) * tanH;
         var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
         var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
         var lineWidth = 2;
         var max = Math.max(sxAUp, sxBUp);
-        var min = Math.min(sxAUp, sxBUp);
-        var dist = max - min;
-        for (var e = min; e < max; e += lineWidth) {
+        for (var e = Math.min(sxAUp, sxBUp); e < max; e += lineWidth) {
             var top = upSlope * e + upSlope * -sxAUp + szAUp;
             var bottom = downSlope * e + downSlope * -sxADown + szADown;
-            // From screen to local coords to get Y coord (depth)
-            // var localY = screenToLocal1 / (top - bottom);
-            var texRatio = fromRatio + ((e - min) / dist) * ratio; 
-            yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': screenToLocal / top, 'img': 1, 'texratio': texRatio});
+            var newy = screenToLocal / top;
+            var newx = e / (1 / newy * tanW);
+            var newx1 = newx - intersA.x;
+            var newy1 = newy - intersA.y;
+            var texRatio = fromRatio + Math.abs((newx1 * line.localDiff.x + newy1 * line.localDiff.y) / dotProj);
+            yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': newy, 'img': 1, 'texratio': texRatio});
         } 
     }
 
