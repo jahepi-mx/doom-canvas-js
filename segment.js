@@ -13,7 +13,6 @@ class Segment {
         this.max = Number.MIN_VALUE;
         this.hasFloor = true;
         this.hasCeiling = true;
-        this.gap = 2;
         this.lines = [];
         this.camera = camera;
         this.tan = tan;
@@ -22,7 +21,7 @@ class Segment {
         this.hw = hw;
         this.hh = hh;
 
-        // Texture
+        // For ceiling and floor texturing
         this.texmins = new Map();
         this.texmaxs = new Map();
         this.ytexmin = Number.MAX_VALUE;
@@ -168,7 +167,7 @@ class Segment {
             yBuffer.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1, 'order': y, 'img': 0});
         }
     }
-
+    // Draws walls
     projectLine(yBuffer, line, down, up) {
         var tanW = this.tan * this.hw3d;
         var tanH = this.tan * this.hh3d;
