@@ -22,10 +22,10 @@ class Segment {
         this.hh = hh;
 
         // For ceiling and floor texturing
-        this.texmins = new Map();
-        this.texmaxs = new Map();
-        this.ytexmin = Number.MAX_VALUE;
-        this.ytexmax = Number.MIN_VALUE;
+        this.minx = Number.MAX_VALUE;
+        this.maxx = Number.MIN_VALUE;
+        this.miny = Number.MAX_VALUE;
+        this.maxy = Number.MIN_VALUE;
         this.texcolors = [];
         this.texcolorsints = [];
     }
@@ -39,6 +39,10 @@ class Segment {
             line.ceiling = ceiling;
             this.lines.push(line);
         }
+        this.minx = Math.min(x1, this.minx);
+        this.maxx = Math.max(x1, this.maxx);
+        this.miny = Math.min(y1, this.miny);
+        this.maxy = Math.max(y1, this.maxy);
         this.positions.push(new Vector(x1, y1));
     }
 
@@ -96,7 +100,6 @@ class Segment {
 
     render(yBuffer, context, localContext) {
         var hasIntersections = false;
-        // Draws lines (walls)
         for (let line of this.lines) {
             line.update(0);
             line.render(context);
@@ -110,20 +113,20 @@ class Segment {
                 line.intersectA.z += line.z;
                 line.intersectB.z += line.z;
     
-                if (line.floor == 0 && line.ceiling == 0) this.projectLine(yBuffer, line, 0, line.height);
-                if (line.floor > 0) this.projectLine(yBuffer, line, 0, line.floor);
-                if (line.ceiling > 0) this.projectLine(yBuffer, line, line.height - line.ceiling, line.height);
+                if (line.floor == 0 && line.ceiling == 0) this.drawWall(yBuffer, line, 0, line.height);
+                if (line.floor > 0) this.drawWall(yBuffer, line, 0, line.floor);
+                if (line.ceiling > 0) this.drawWall(yBuffer, line, line.height - line.ceiling, line.height);
             }
         }
         if (!hasIntersections) {
             return;
         }
-        if (this.hasCeiling) this.drawSurfaceTexture(this.zUp);
-        if (this.hasFloor) this.drawSurfaceTexture(this.zBottom);
+        if (this.hasCeiling) this.drawSurface(this.zUp);
+        if (this.hasFloor) this.drawSurface(this.zBottom);
     }
     /* The idea behind this is to get the Z screen coordinates, which represent the screen height. We then loop through that range, retrieving the Y world coordinate (depth) and the X world coordinate, 
        and convert them to X screen coordinates. As we loop through this range, we convert each pixel back to world coordinates to get the color of the texture. */
-    drawSurfaceTexture(height) {
+    drawSurface(height) {
         var tanH = this.tan * this.hh3d;
         var tanW = this.tan * this.hw3d;
         var zScreenMinA = (-this.camera.z + height) * (1 / this.min) * tanH;
@@ -149,14 +152,15 @@ class Segment {
             var prevColor = null;
             var prevSize = 0;
             var prevX = xMinScreen;
+            var draws = [];
             for (var xScreen = xMinScreen; xScreen <= xMaxScreen; xScreen++) {
                 var x = xScreen / ((1 / y) * tanW);
                 var world = this.player.convertToWorld(x, y);
-                var index = (world.y + 1000) * 10000 + world.x + 1000;
+                var index = (world.y - this.miny) * (this.maxx - this.minx) + (world.x - this.minx);
                 var color = this.texcolors[index];
                 var colorint = this.texcolorsints[index];
                 if (prevColorInt != colorint && xScreen > xMinScreen) {
-                    yBuffer.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1, 'order': y, 'img': 0});
+                    draws.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1});
                     prevX = xScreen;
                     prevSize = 0;
                 }
@@ -164,11 +168,12 @@ class Segment {
                 prevColorInt = colorint;
                 prevColor = color;
             }
-            yBuffer.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1, 'order': y, 'img': 0});
+            draws.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1});
+            yBuffer.push({'order': y, 'img': 0, 'data': draws});
         }
     }
-    // Draws walls
-    projectLine(yBuffer, line, down, up) {
+    
+    drawWall(yBuffer, line, down, up) {
         var tanW = this.tan * this.hw3d;
         var tanH = this.tan * this.hh3d;
         var x = line.intersectA.x;
@@ -223,50 +228,16 @@ class Segment {
         } 
     }
 
-    texturizeFloorCeiling() {
-        var len = this.positions.length;
-        for (var a = 0; a < len; a++) {
-            var aPos = this.positions[a];
-            var bPos = this.positions[(a + 1) % len];
-            var xA = parseInt(aPos.x);
-            var yA = parseInt(aPos.y);
-            var xB = parseInt(bPos.x);
-            var yB = parseInt(bPos.y);
-            if (yB < yA) {
-                var tmpX = xA;
-                var tmpY = yA;
-                xA = xB;
-                yA = yB;
-                xB = tmpX;
-                yB = tmpY;
-            }
-            var xDiff = xB - xA;
-            var yDiff = yB - yA;
-            for (var y = yA; y <= yB; y++) {
-                if (yDiff != 0) {
-                    var ratio = (y - yA) / yDiff;
-                    var x = xA + ratio * xDiff;
-                    if (!this.texmins.has(y)) {
-                        this.texmins.set(y, x);
-                    }
-                    if (!this.texmaxs.has(y)) {
-                        this.texmaxs.set(y, x);
-                    }
-                    this.texmins.set(y, Math.min(x, this.texmins.get(y)));
-                    this.texmaxs.set(y, Math.max(x, this.texmaxs.get(y)));
-                    this.ytexmin = Math.min(y, this.ytexmin);
-                    this.ytexmax = Math.max(y, this.ytexmax);
-                }
-            }
-        }
-        var colors = ["red", "red", "red", "red", "black", "black", "black", "black", "black", "black"];
-        var colorsints = [1, 1, 1, 1, 2, 2, 2, 2, 2, 2];
-        for (var y = this.ytexmin, inc = 0; y <= this.ytexmax; y++, inc++) {
-            var xmin = this.texmins.get(y);
-            var xmax = this.texmaxs.get(y);
-            for (var x = xmin; x <= xmax; x++) {
-                this.texcolors[(y + 1000) * 10000 + x + 1000] = colors[inc % colors.length];
-                this.texcolorsints[(y + 1000) * 10000 + x + 1000] = colorsints[inc % colors.length];
+    loadFloorCeilingTextureData(imageData) {
+        for (var x = this.minx; x <= this.maxx; x++) {
+            for (var y = this.miny; y <= this.maxy; y++) {
+                var rx = (x - this.minx) / (this.maxx - this.minx);
+                var ry = (y - this.miny) / (this.maxy - this.miny);
+                var ix = parseInt(imageData.width * rx);
+                var iy = parseInt(imageData.height * ry);
+                var i = (iy * imageData.width + ix) * 4;
+                this.texcolorsints[(y - this.miny) * (this.maxx - this.minx) + (x - this.minx)] = imageData.data[i] << 16 | imageData.data[i + 1] << 8 | imageData.data[i + 2];
+                this.texcolors[(y - this.miny) * (this.maxx - this.minx) + (x - this.minx)] = "#" + (1 << 24 | imageData.data[i] << 16 | imageData.data[i + 1] << 8 | imageData.data[i + 2]).toString(16).slice(1);
             }
         }
     }
