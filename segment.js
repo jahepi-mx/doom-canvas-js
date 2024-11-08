@@ -1,6 +1,6 @@
 class Segment {
 
-    constructor(player, camera, zBottom, height, tan, hw3d, hh3d, hw, hh) {
+    constructor(player, camera, zBottom, height, tan, hw3d, hh3d, hw, hh, zCam) {
         this.player = player;
         this.positions = [];
         this.localPositions = [];
@@ -21,7 +21,8 @@ class Segment {
         this.hw = hw;
         this.hh = hh;
         this.collided = false;
-
+        this.isInside = false;
+        this.zCam = zCam;
         // For ceiling and floor texturing
         this.minx = Number.MAX_VALUE;
         this.maxx = Number.MIN_VALUE;
@@ -103,10 +104,16 @@ class Segment {
     render(yBuffer, context, localContext) {
         var hasIntersections = false;
         this.collided = false;
+        this.isInside = true;
+        var sign = null;
         for (let line of this.lines) {
             line.update(0);
             line.render(context);
             line.localRender(localContext);
+            var cross = line.cross();
+            sign = sign == null ? cross >= 0 : sign;
+            this.isInside = sign && cross < 0 ? false : this.isInside;
+            this.isInside = !sign && cross >= 0 ? false : this.isInside;
             if (line.hasIntersectionPoints()) {
                 hasIntersections = true;
                 line.intersectLocalRender(localContext);

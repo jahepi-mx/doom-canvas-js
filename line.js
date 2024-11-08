@@ -59,6 +59,12 @@ class Line {
         context.fillRect(this.offset.x + this.intersectB.x - 3, this.offset.y - (this.intersectB.y + 3), 6, 6);
     }
 
+    cross() {
+        // this.localDiff.x, this.localDiff.y
+        // -this.localPosition1.x, -this.localPosition1.y
+        return this.localDiff.x * -this.localPosition1.y + this.localDiff.y * this.localPosition1.x;
+    }
+
     intersect(line) {
         var den1 = this.localPosition2.x - this.localPosition1.x;
         var den2 = line.localPosition2.x - line.localPosition1.x;

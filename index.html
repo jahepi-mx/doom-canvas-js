@@ -26,6 +26,8 @@ var height3d = 300;
 var hw3d = width3d * 0.5;
 var hh3d = height3d * 0.5;
 var image = null;
+var zCam = 0;
+var zCamOffset = 100;
 
 //Perpective
 var tan = 0;
@@ -56,9 +58,9 @@ window.onload = function() {
     var floorImgData = floorContext.getImageData(0, 0, canvas.width, canvas.height);
 
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
-    camZOffset.z = 100;
+    camZOffset.z = zCamOffset;
 
-    var segment = new Segment(player, camZOffset, 0, 300, tan, hw3d, hh3d, hw, hh);
+    var segment = new Segment(player, camZOffset, 0, 300, tan, hw3d, hh3d, hw, hh, 0);
     segment.add(-300, 150, -250, 200, "yellow", 0, 0, true);
     segment.add(-250, 200, 250, 200, "cyan", 0, 0, true);
     segment.add(250, 200, 300, 150, "red", 0, 0, true);
@@ -70,7 +72,7 @@ window.onload = function() {
     segment.loadFloorCeilingTextureData(floorImgData);
     segments.push(segment);
 
-    segment = new Segment(player, camZOffset, 0, 40, tan, hw3d, hh3d, hw, hh);
+    segment = new Segment(player, camZOffset, 0, 40, tan, hw3d, hh3d, hw, hh, 30);
     segment.add(180, 20, 200, 40, "yellow", 0, 0, false);
     segment.add(200, 40, 220, 40, "cyan", 0, 0, false);
     segment.add(220, 40, 220, -40, "red", 0, 0, false);
@@ -81,7 +83,7 @@ window.onload = function() {
     segment.loadFloorCeilingTextureData(floorImgData);
     segments.push(segment);
 
-    segment = new Segment(player, camZOffset, 0, 80, tan, hw3d, hh3d, hw, hh);
+    segment = new Segment(player, camZOffset, 0, 80, tan, hw3d, hh3d, hw, hh, 50);
     segment.add(220, 60, 260, 60, "yellow", 0, 0, false);
     segment.add(260, 60, 260, -60, "cyan", 0, 0, false);
     segment.add(260, -60, 220, -60, "red", 0, 0, false);
@@ -90,16 +92,16 @@ window.onload = function() {
     segment.loadFloorCeilingTextureData(floorImgData);
     segments.push(segment);
 
-    segment = new Segment(player, camZOffset, 0, 120, tan, hw3d, hh3d, hw, hh);
+    segment = new Segment(player, camZOffset, 0, 120, tan, hw3d, hh3d, hw, hh, 70);
     segment.add(260, 80, 300, 80, "yellow", 0, 0, false);
-    segment.add(300, 80, null, null, "cyan", 0, 0, false);
+    segment.add(300, 80, 300, -80, "cyan", 0, 0, false);
     segment.add(300, -80, 260, -80, "red", 0, 0, false);
     segment.add(260, -80, 260, 80, "brown", 0, 0, false);
     segment.hasFloor = false;
     segment.loadFloorCeilingTextureData(floorImgData);
     segments.push(segment);
 
-    segment = new Segment(player, camZOffset, 120, 180, tan, hw3d, hh3d, hw, hh);
+    segment = new Segment(player, camZOffset, 120, 180, tan, hw3d, hh3d, hw, hh, 90);
     segment.add(300, 150, 650, 150, "yellow", 0, 0, true);
     segment.add(650, 150, 650, -150, "cyan", 20, 0, false);
     segment.add(650, -150, 300, -150, "red", 0, 0, true);
@@ -156,8 +158,9 @@ function render(time) {
         //return;
     }
 
-    camZOffset.z += camUp ? 50 * dt : 0;
-    camZOffset.z += camDown ? -50 * dt : 0;
+    //camZOffset.z += camUp ? 50 * dt : 0;
+    //camZOffset.z += camDown ? -50 * dt : 0;
+    camZOffset.z = zCamOffset + zCam;
 
     player.update(dt);
     player.render(context);
@@ -165,10 +168,12 @@ function render(time) {
     yBuffer = [];
 
     var canMove = true;
+    zCam = 0;
     for (let segment of segments) {
         segment.update(dt);
         segment.render(yBuffer, context, localContext);
         canMove = canMove && !segment.collided;
+        zCam = segment.isInside ? Math.max(zCam, segment.zCam) : zCam;
     }
     player.canMove = canMove;
     //console.log(yBuffer.length);
