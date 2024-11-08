@@ -221,7 +221,8 @@ class Segment {
         var dotProj = line.localDiff.x * line.localDiff.x + line.localDiff.y * line.localDiff.y;
         var fromRatio = Math.abs(dot1 / dotProj);
     
-        var screenToLocal = (prevZ + up) * tanH;
+        var screenToLocalUp = (prevZ + up) * tanH;
+        var screenToLocalDown = (prevZ + down) * tanH;
         var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
         var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
         var lineWidth = 2;
@@ -229,7 +230,7 @@ class Segment {
         for (var e = Math.min(sxAUp, sxBUp); e < max; e += lineWidth) {
             var top = upSlope * e + upSlope * -sxAUp + szAUp;
             var bottom = downSlope * e + downSlope * -sxADown + szADown;
-            var newy = screenToLocal / top;
+            var newy = top == 0 ? screenToLocalDown / bottom : screenToLocalUp / top;
             var newx = e / (1 / newy * tanW);
             var newx1 = newx - intersA.x;
             var newy1 = newy - intersA.y;
