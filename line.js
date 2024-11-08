@@ -21,6 +21,7 @@ class Line {
         this.ceiling = 0;
         this.floor = 0;
         this.z = 0;
+        this.isWall = false;
     }
 
     update(dt) {

@@ -20,6 +20,8 @@ class Player {
         this.fovLeft = null;
         this.fovRight = null;
         this.fovCenter = null;
+        this.wallSensor = null;
+        this.canMove = false;
     }
 
     update(dt) {
@@ -44,11 +46,13 @@ class Player {
         this.fovLeft = new Line(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + Math.cos((this.degrees + this.fovDegrees) * this.toRadians) * this.fovLen, this.position.y + Math.sin((this.degrees + this.fovDegrees) * this.toRadians) * this.fovLen, 'green', this);
         this.fovRight = new Line(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + Math.cos((this.degrees - this.fovDegrees) * this.toRadians) * this.fovLen, this.position.y + Math.sin((this.degrees - this.fovDegrees) * this.toRadians) * this.fovLen, 'green', this);
         this.fovCenter = new Line(this.offset.x, this.offset.y, this.fovLeft.position2.x, this.fovLeft.position2.y, this.fovRight.position2.x, this.fovRight.position2.y, 'green', this);
+        this.wallSensor = new Line(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + this.yAxis.x * 10, this.position.y + this.yAxis.y * 10, 'pink', this);
         this.fovLeft.update(dt);
         this.fovRight.update(dt);
         this.fovCenter.update(dt);
+        this.wallSensor.update(dt);
 
-        if (this.up) {
+        if (this.up && this.canMove) {
             this.position.x += this.yAxis.x * this.velocity.x * dt;
             this.position.y += this.yAxis.y * this.velocity.x * dt;
         }

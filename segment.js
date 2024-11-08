@@ -20,6 +20,7 @@ class Segment {
         this.hh3d = hh3d;
         this.hw = hw;
         this.hh = hh;
+        this.collided = false;
 
         // For ceiling and floor texturing
         this.minx = Number.MAX_VALUE;
@@ -30,13 +31,14 @@ class Segment {
         this.texcolorsints = [];
     }
 
-    add(x1, y1, x2, y2, color, floor, ceiling) {
+    add(x1, y1, x2, y2, color, floor, ceiling, isWall) {
         if (x2 != null) {
             var line = new Line(this.hw, this.hh, x1, y1, x2, y2, color, this.player);
             line.z = this.zBottom;
             line.height = this.height;
             line.floor = floor;
             line.ceiling = ceiling;
+            line.isWall = isWall;
             this.lines.push(line);
         }
         this.minx = Math.min(x1, this.minx);
@@ -100,6 +102,7 @@ class Segment {
 
     render(yBuffer, context, localContext) {
         var hasIntersections = false;
+        this.collided = false;
         for (let line of this.lines) {
             line.update(0);
             line.render(context);
@@ -112,7 +115,7 @@ class Segment {
                 line.intersectB.z -= this.camera.z;
                 line.intersectA.z += line.z;
                 line.intersectB.z += line.z;
-    
+                this.collided =  line.isWall && line.intersect(this.player.wallSensor) != null ? true : this.collided;
                 if (line.floor == 0 && line.ceiling == 0) this.drawWall(yBuffer, line, 0, line.height);
                 if (line.floor > 0) this.drawWall(yBuffer, line, 0, line.floor);
                 if (line.ceiling > 0) this.drawWall(yBuffer, line, line.height - line.ceiling, line.height);
