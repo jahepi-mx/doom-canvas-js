@@ -1,4 +1,4 @@
-class Segment {
+class Sector {
 
     constructor(player, camera, zBottom, height, tan, hw3d, hh3d, hw, hh, zCam) {
         this.player = player;

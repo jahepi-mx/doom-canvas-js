@@ -1,11 +1,11 @@
 <html>
 
 <head>
-<title>Test</title>
+<title>Doom canvas js</title>
 <meta charset="UTF-8">
 <script src="vector.js"></script>
 <script src="line.js"></script>
-<script src="segment.js"></script>
+<script src="sector.js"></script>
 <script src="player.js"></script>
 <script>
 var w = 500;
@@ -35,7 +35,7 @@ var camZOffset = new Vector(0, 0);
 var camUp = camDown = false;
 var yBuffer = [];
 
-var segments = [];
+var sectors = [];
 
 window.onload = function() {
     canvas = document.getElementById("canvas");
@@ -60,54 +60,54 @@ window.onload = function() {
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
     camZOffset.z = zCamOffset;
 
-    var segment = new Segment(player, camZOffset, 0, 300, tan, hw3d, hh3d, hw, hh, 0);
-    segment.add(-300, 150, -250, 200, "yellow", 0, 0, true);
-    segment.add(-250, 200, 250, 200, "cyan", 0, 0, true);
-    segment.add(250, 200, 300, 150, "red", 0, 0, true);
-    segment.add(300, 150, 300, -150, "brown", 120, 0, false);
-    segment.add(300, -150, 250, -200, "green", 0, 0, true);
-    segment.add(250, -200, -250, -200, "pink", 0, 0, true);
-    segment.add(-250, -200, -300, -150, "white", 0, 0, true);
-    segment.add(-300, -150, -300, 150, "orange", 0, 0, true);
-    segment.loadFloorCeilingTextureData(floorImgData);
-    segments.push(segment);
+    var sector = new Sector(player, camZOffset, 0, 300, tan, hw3d, hh3d, hw, hh, 0);
+    sector.add(-300, 150, -250, 200, "yellow", 0, 0, true);
+    sector.add(-250, 200, 250, 200, "cyan", 0, 0, true);
+    sector.add(250, 200, 300, 150, "red", 0, 0, true);
+    sector.add(300, 150, 300, -150, "brown", 120, 0, false);
+    sector.add(300, -150, 250, -200, "green", 0, 0, true);
+    sector.add(250, -200, -250, -200, "pink", 0, 0, true);
+    sector.add(-250, -200, -300, -150, "white", 0, 0, true);
+    sector.add(-300, -150, -300, 150, "orange", 0, 0, true);
+    sector.loadFloorCeilingTextureData(floorImgData);
+    sectors.push(sector);
 
-    segment = new Segment(player, camZOffset, 0, 40, tan, hw3d, hh3d, hw, hh, 20);
-    segment.add(180, 20, 200, 40, "yellow", 0, 0, false);
-    segment.add(200, 40, 220, 40, "cyan", 0, 0, false);
-    segment.add(220, 40, 220, -40, "red", 0, 0, false);
-    segment.add(220, -40, 200, -40, "brown", 0, 0, false);
-    segment.add(200, -40, 180, -20, "green", 0, 0, false);
-    segment.add(180, -20, 180, 20, "pink", 0, 0, false);
-    segment.hasFloor = false;
-    segment.loadFloorCeilingTextureData(floorImgData);
-    segments.push(segment);
+    sector = new Sector(player, camZOffset, 0, 40, tan, hw3d, hh3d, hw, hh, 20);
+    sector.add(180, 20, 200, 40, "yellow", 0, 0, false);
+    sector.add(200, 40, 220, 40, "cyan", 0, 0, false);
+    sector.add(220, 40, 220, -40, "red", 0, 0, false);
+    sector.add(220, -40, 200, -40, "brown", 0, 0, false);
+    sector.add(200, -40, 180, -20, "green", 0, 0, false);
+    sector.add(180, -20, 180, 20, "pink", 0, 0, false);
+    sector.hasFloor = false;
+    sector.loadFloorCeilingTextureData(floorImgData);
+    sectors.push(sector);
 
-    segment = new Segment(player, camZOffset, 0, 80, tan, hw3d, hh3d, hw, hh, 50);
-    segment.add(220, 60, 260, 60, "yellow", 0, 0, false);
-    segment.add(260, 60, 260, -60, "cyan", 0, 0, false);
-    segment.add(260, -60, 220, -60, "red", 0, 0, false);
-    segment.add(220, -60, 220, 60, "brown", 0, 0, false);
-    segment.hasFloor = false;
-    segment.loadFloorCeilingTextureData(floorImgData);
-    segments.push(segment);
+    sector = new Sector(player, camZOffset, 0, 80, tan, hw3d, hh3d, hw, hh, 50);
+    sector.add(220, 60, 260, 60, "yellow", 0, 0, false);
+    sector.add(260, 60, 260, -60, "cyan", 0, 0, false);
+    sector.add(260, -60, 220, -60, "red", 0, 0, false);
+    sector.add(220, -60, 220, 60, "brown", 0, 0, false);
+    sector.hasFloor = false;
+    sector.loadFloorCeilingTextureData(floorImgData);
+    sectors.push(sector);
 
-    segment = new Segment(player, camZOffset, 0, 120, tan, hw3d, hh3d, hw, hh, 70);
-    segment.add(260, 80, 300, 80, "yellow", 0, 0, false);
-    segment.add(300, 80, 300, -80, "cyan", 0, 0, false);
-    segment.add(300, -80, 260, -80, "red", 0, 0, false);
-    segment.add(260, -80, 260, 80, "brown", 0, 0, false);
-    segment.hasFloor = false;
-    segment.loadFloorCeilingTextureData(floorImgData);
-    segments.push(segment);
+    sector = new Sector(player, camZOffset, 0, 120, tan, hw3d, hh3d, hw, hh, 70);
+    sector.add(260, 80, 300, 80, "yellow", 0, 0, false);
+    sector.add(300, 80, 300, -80, "cyan", 0, 0, false);
+    sector.add(300, -80, 260, -80, "red", 0, 0, false);
+    sector.add(260, -80, 260, 80, "brown", 0, 0, false);
+    sector.hasFloor = false;
+    sector.loadFloorCeilingTextureData(floorImgData);
+    sectors.push(sector);
 
-    segment = new Segment(player, camZOffset, 120, 180, tan, hw3d, hh3d, hw, hh, 70);
-    segment.add(300, 150, 650, 150, "yellow", 0, 0, true);
-    segment.add(650, 150, 650, -150, "cyan", 20, 0, false);
-    segment.add(650, -150, 300, -150, "red", 0, 0, true);
-    segment.add(300, -150, 300, 150, "brown", 0, 20, false);
-    segment.loadFloorCeilingTextureData(floorImgData);
-    segments.push(segment);
+    sector = new Sector(player, camZOffset, 120, 180, tan, hw3d, hh3d, hw, hh, 70);
+    sector.add(300, 150, 650, 150, "yellow", 0, 0, true);
+    sector.add(650, 150, 650, -150, "cyan", 20, 0, false);
+    sector.add(650, -150, 300, -150, "red", 0, 0, true);
+    sector.add(300, -150, 300, 150, "brown", 0, 20, false);
+    sector.loadFloorCeilingTextureData(floorImgData);
+    sectors.push(sector);
 
     image = new Image(50, 50);
     image.onload = onLoadImage;
@@ -169,11 +169,11 @@ function render(time) {
 
     var canMove = true;
     zCam = 0;
-    for (let segment of segments) {
-        segment.update(dt);
-        segment.render(yBuffer, context, localContext);
-        canMove = canMove && !segment.collided;
-        zCam = segment.isInside ? Math.max(zCam, segment.zCam) : zCam;
+    for (let sector of sectors) {
+        sector.update(dt);
+        sector.render(yBuffer, context, localContext);
+        canMove = canMove && !sector.collided;
+        zCam = sector.isInside ? Math.max(zCam, sector.zCam) : zCam;
     }
     player.canMove = canMove;
     //console.log(yBuffer.length);
