@@ -1,1 +1,1 @@
-# graphics_test
+# doom-canvas-js
