@@ -131,12 +131,12 @@ class Segment {
         if (!hasIntersections) {
             return;
         }
-        if (this.hasCeiling) this.drawSurface(this.zUp);
-        if (this.hasFloor) this.drawSurface(this.zBottom);
+        if (this.hasCeiling) this.drawSurface(yBuffer, this.zUp);
+        if (this.hasFloor) this.drawSurface(yBuffer, this.zBottom);
     }
     /* The idea behind this is to get the Z screen coordinates, which represent the screen height. We then loop through that range, retrieving the Y world coordinate (depth) and the X world coordinate, 
        and convert them to X screen coordinates. As we loop through this range, we convert each pixel back to world coordinates to get the color of the texture. */
-    drawSurface(height) {
+    drawSurface(yBuffer, height) {
         var tanH = this.tan * this.hh3d;
         var tanW = this.tan * this.hw3d;
         var zScreenMinA = (-this.camera.z + height) * (1 / this.min) * tanH;
@@ -146,7 +146,7 @@ class Segment {
         zScreenMaxA = zScreenMaxA < -this.hh3d ? -this.hh3d : zScreenMaxA;
         zScreenMaxA = zScreenMaxA > this.hh3d ? this.hh3d : zScreenMaxA;
         var maxz = Math.max(zScreenMinA, zScreenMaxA);
-        for (var sz = Math.min(zScreenMinA, zScreenMaxA); sz <= maxz; sz++) {
+        for (var sz = Math.min(zScreenMinA, zScreenMaxA); sz < maxz; sz++) {
             var y = parseInt((-this.camera.z + height) * tanH * (1 / sz));
             var min = this.mins[y];
             var max = this.maxs[y];
