@@ -33,15 +33,13 @@ class Sector {
     }
 
     add(x1, y1, x2, y2, color, floor, ceiling, isWall) {
-        if (x2 != null) {
-            var line = new Line(this.hw, this.hh, x1, y1, x2, y2, color, this.player);
-            line.z = this.zBottom;
-            line.height = this.height;
-            line.floor = floor;
-            line.ceiling = ceiling;
-            line.isWall = isWall;
-            this.lines.push(line);
-        }
+        var line = new Line(this.hw, this.hh, x1, y1, x2, y2, color, this.player);
+        line.z = this.zBottom;
+        line.height = this.height;
+        line.floor = floor;
+        line.ceiling = ceiling;
+        line.isWall = isWall;
+        this.lines.push(line);
         this.minx = Math.min(x1, this.minx);
         this.maxx = Math.max(x1, this.maxx);
         this.miny = Math.min(y1, this.miny);
@@ -214,13 +212,9 @@ class Sector {
         var diffY1 = intersB.y - intersA.y;
         var diffX2 = line.localPosition1.x - intersA.x;
         var diffY2 = line.localPosition1.y - intersA.y;
-        var diffX3 = line.localPosition2.x - intersA.x;
-        var diffY3 = line.localPosition2.y - intersA.y;
-        var dot1 = diffX1 * diffX2 + diffY1 * diffY2 <= 0 ? diffX2 * line.localDiff.x + diffY2 * line.localDiff.y : 0;
-        dot1 = diffX1 * diffX3 + diffY1 * diffY3 <= 0 ? diffX3 * line.localDiff.x + diffY3 * line.localDiff.y : dot1;
         var dotProj = line.localDiff.x * line.localDiff.x + line.localDiff.y * line.localDiff.y;
-        var fromRatio = Math.abs(dot1 / dotProj);
-    
+        var startPos = diffX1 * diffX2 + diffY1 * diffY2 <= 0 ? line.localPosition1 : line.localPosition2;
+
         var screenToLocalUp = (prevZ + up) * tanH;
         var screenToLocalDown = (prevZ + down) * tanH;
         var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
@@ -232,10 +226,7 @@ class Sector {
             var bottom = downSlope * e + downSlope * -sxADown + szADown;
             var newy = top == 0 ? screenToLocalDown / bottom : screenToLocalUp / top;
             var newx = e / (1 / newy * tanW);
-            var newx1 = newx - intersA.x;
-            var newy1 = newy - intersA.y;
-            var texRatio = fromRatio + Math.abs((newx1 * line.localDiff.x + newy1 * line.localDiff.y) / dotProj);
-            texRatio = texRatio > 0.98 ? 0.98 : texRatio; // A small fix to sort out the texture of the edges
+            var texRatio = Math.abs((newx - startPos.x) * line.localDiff.x + (newy - startPos.y) * line.localDiff.y) / dotProj * 0.98;
             yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': newy, 'img': 1, 'texratio': texRatio});
         } 
     }
