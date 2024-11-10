@@ -235,6 +235,7 @@ class Sector {
             var newx1 = newx - intersA.x;
             var newy1 = newy - intersA.y;
             var texRatio = fromRatio + Math.abs((newx1 * line.localDiff.x + newy1 * line.localDiff.y) / dotProj);
+            texRatio = texRatio > 0.98 ? 0.98 : texRatio; // A small fix to sort out the texture of the edges
             yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': newy, 'img': 1, 'texratio': texRatio});
         } 
     }
