@@ -126,6 +126,6 @@ class Player {
         var ny = x * this.xAxis.y + y * this.yAxis.y;
         nx += this.position.x;
         ny += this.position.y;
-        return new Vector(parseInt(nx), parseInt(ny));
+        return new Vector(nx | 0, ny | 0);
     }
 }

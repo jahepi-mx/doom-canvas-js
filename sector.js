@@ -64,10 +64,10 @@ class Sector {
         for (var a = 0; a < len; a++) {
             var aPos = this.localPositions[a];
             var bPos = this.localPositions[(a + 1) % len];
-            var xA = parseInt(aPos.x);
-            var yA = parseInt(aPos.y);
-            var xB = parseInt(bPos.x);
-            var yB = parseInt(bPos.y);
+            var xA = aPos.x | 0;
+            var yA = aPos.y | 0;
+            var xB = bPos.x | 0;
+            var yB = bPos.y | 0;
             if (yB < yA) {
                 var tmpX = xA;
                 var tmpY = yA;
@@ -145,7 +145,7 @@ class Sector {
         zScreenMaxA = zScreenMaxA > this.hh3d ? this.hh3d : zScreenMaxA;
         var maxz = Math.max(zScreenMinA, zScreenMaxA);
         for (var sz = Math.min(zScreenMinA, zScreenMaxA); sz < maxz; sz++) {
-            var y = parseInt((-this.camera.z + height) * tanH * (1 / sz));
+            var y = ((-this.camera.z + height) * tanH * (1 / sz)) | 0;
             var min = this.mins[y];
             var max = this.maxs[y];
             //localContext.fillStyle = "white";
@@ -236,8 +236,8 @@ class Sector {
             for (var y = this.miny; y <= this.maxy; y++) {
                 var rx = (x - this.minx) / (this.maxx - this.minx);
                 var ry = (y - this.miny) / (this.maxy - this.miny);
-                var ix = parseInt(imageData.width * rx);
-                var iy = parseInt(imageData.height * ry);
+                var ix = (imageData.width * rx) | 0;
+                var iy = (imageData.height * ry) | 0;
                 var i = (iy * imageData.width + ix) * 4;
                 this.texcolorsints[(y - this.miny) * (this.maxx - this.minx) + (x - this.minx)] = imageData.data[i] << 16 | imageData.data[i + 1] << 8 | imageData.data[i + 2];
                 this.texcolors[(y - this.miny) * (this.maxx - this.minx) + (x - this.minx)] = "#" + (1 << 24 | imageData.data[i] << 16 | imageData.data[i + 1] << 8 | imageData.data[i + 2]).toString(16).slice(1);
