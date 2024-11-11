@@ -226,8 +226,8 @@ class Sector {
             var bottom = downSlope * e + downSlope * -sxADown + szADown;
             var newy = top == 0 ? screenToLocalDown / bottom : screenToLocalUp / top;
             var newx = e / (1 / newy * tanW);
-            var texRatio = Math.abs((newx - startPos.x) * line.localDiff.x + (newy - startPos.y) * line.localDiff.y) / dotProj * 0.98;
-            yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth + 1, 'order': newy, 'img': 1, 'texratio': texRatio});
+            var texRatio = Math.abs((newx - startPos.x) * line.localDiff.x + (newy - startPos.y) * line.localDiff.y) / dotProj;
+            yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth, 'order': newy, 'img': 1, 'texratio': texRatio});
         } 
     }
 
