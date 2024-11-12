@@ -1,6 +1,6 @@
 class Line {
     
-    constructor(offsetx, offsety, x1, y1, x2, y2, color, player) {
+    constructor(offsetx, offsety, x1, y1, x2, y2, color, player, zBottom, height, floor, ceiling, isWall, draw, connectedSector) {
         this.position1 = new Vector(x1, y1);
         this.position2 = new Vector(x2, y2);
         this.localPosition1 = new Vector(0, 0);
@@ -17,11 +17,13 @@ class Line {
         this.intersectB = null;
         this.intersections = new Array(5);
         this.intersectionCount = 0;
-        this.height = 200;
-        this.ceiling = 0;
-        this.floor = 0;
-        this.z = 0;
-        this.isWall = false;
+        this.height = height;
+        this.ceiling = ceiling;
+        this.floor = floor;
+        this.z = zBottom;
+        this.isWall = isWall;
+        this.connectedSector = connectedSector;
+        this.draw = draw;
     }
 
     update(dt) {
@@ -126,5 +128,23 @@ class Line {
         if (pos != null) {
             this.intersections[this.intersectionCount++] = pos;
         }
+    }
+
+    getBounds(tanW, tanH, left, right, top, bottom) {
+        var down = this.floor;
+        var up = this.height - this.ceiling;
+        var tmp1 = 1 / this.intersectB.y;
+        var tmp2 = 1 / this.intersectA.y;
+        var sxAUp = this.intersectB.x * tmp1 * tanW;
+        var szAUp = (this.intersectB.z + up) * tmp1 * tanH;
+        var sxBUp = this.intersectA.x * tmp2 * tanW;
+        var szBUp = (this.intersectA.z + up) * tmp2 * tanH;
+        var szADown = (this.intersectB.z + down) * tmp1 * tanH;
+        var szBDown = (this.intersectA.z + down) * tmp2 * tanH;
+        return {
+            "left": Math.max(left, Math.min(sxAUp, sxBUp)), 
+            "right": Math.min(right, Math.max(sxAUp, sxBUp)), 
+            "top": Math.min(top, Math.max(szAUp, szBUp)), 
+            "bottom": Math.max(bottom, Math.min(szADown, szBDown))};        
     }
 }

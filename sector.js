@@ -1,9 +1,11 @@
 class Sector {
 
-    constructor(player, camera, zBottom, height, tan, hw3d, hh3d, hw, hh, zCam) {
+    constructor(id, player, camera, zBottom, height, tan, hw3d, hh3d, hw, hh, zCam) {
+        this.id = id;
         this.player = player;
         this.positions = [];
         this.localPositions = [];
+        this.innerSectors = [];
         this.mins = [];
         this.maxs = [];
         this.zBottom = zBottom;
@@ -32,14 +34,8 @@ class Sector {
         this.texcolorsints = [];
     }
 
-    add(x1, y1, x2, y2, color, floor, ceiling, isWall) {
-        var line = new Line(this.hw, this.hh, x1, y1, x2, y2, color, this.player);
-        line.z = this.zBottom;
-        line.height = this.height;
-        line.floor = floor;
-        line.ceiling = ceiling;
-        line.isWall = isWall;
-        this.lines.push(line);
+    add(x1, y1, x2, y2, color, floor, ceiling, isWall, draw, connectedSector) {
+        this.lines.push(new Line(this.hw, this.hh, x1, y1, x2, y2, color, this.player, this.zBottom, this.height, floor, ceiling, isWall, draw, connectedSector));
         this.minx = Math.min(x1, this.minx);
         this.maxx = Math.max(x1, this.maxx);
         this.miny = Math.min(y1, this.miny);
@@ -99,7 +95,7 @@ class Sector {
         }
     }
 
-    render(yBuffer, context, localContext) {
+    render(yBuffer, context, localContext, stack, bounds) {
         var hasIntersections = false;
         this.collided = false;
         this.isInside = true;
@@ -115,47 +111,41 @@ class Sector {
             if (line.hasIntersectionPoints()) {
                 hasIntersections = true;
                 line.intersectLocalRender(localContext);
-
                 line.intersectA.z -= this.camera.z;
                 line.intersectB.z -= this.camera.z;
                 line.intersectA.z += line.z;
                 line.intersectB.z += line.z;
                 this.collided =  line.isWall && line.intersect(this.player.wallSensor) != null ? true : this.collided;
-                if (line.floor == 0 && line.ceiling == 0) this.drawWall(yBuffer, line, 0, line.height);
-                if (line.floor > 0) this.drawWall(yBuffer, line, 0, line.floor);
-                if (line.ceiling > 0) this.drawWall(yBuffer, line, line.height - line.ceiling, line.height);
+                if (line.connectedSector != null) stack.addSector(line.connectedSector, line.getBounds(this.tan * this.hw3d, this.tan * this.hh3d, -this.hw3d, this.hw3d, this.hh3d, -this.hh3d));
+                if (line.draw && line.floor == 0 && line.ceiling == 0) this.drawWall(yBuffer, line, 0, line.height, bounds);
+                if (line.draw && line.floor > 0) this.drawWall(yBuffer, line, 0, line.floor, bounds);
+                if (line.draw && line.ceiling > 0) this.drawWall(yBuffer, line, line.height - line.ceiling, line.height, bounds);
             }
         }
         if (!hasIntersections) {
             return;
         }
-        if (this.hasCeiling) this.drawSurface(yBuffer, this.zUp);
-        if (this.hasFloor) this.drawSurface(yBuffer, this.zBottom);
+        if (this.hasCeiling) this.drawSurface(yBuffer, this.zUp, bounds);
+        if (this.hasFloor) this.drawSurface(yBuffer, this.zBottom, bounds);
     }
     /* The idea behind this is to get the Z screen coordinates, which represent the screen height. We then loop through that range, retrieving the Y world coordinate (depth) and the X world coordinate, 
        and convert them to X screen coordinates. As we loop through this range, we convert each pixel back to world coordinates to get the color of the texture. */
-    drawSurface(yBuffer, height) {
+    drawSurface(yBuffer, height, bounds) {
         var tanH = this.tan * this.hh3d;
         var tanW = this.tan * this.hw3d;
         var zScreenMinA = (-this.camera.z + height) * (1 / this.min) * tanH;
         var zScreenMaxA = (-this.camera.z + height) * (1 / this.max) * tanH;
-        zScreenMinA = zScreenMinA < -this.hh3d ? -this.hh3d : zScreenMinA;
-        zScreenMinA = zScreenMinA > this.hh3d ? this.hh3d : zScreenMinA;
-        zScreenMaxA = zScreenMaxA < -this.hh3d ? -this.hh3d : zScreenMaxA;
-        zScreenMaxA = zScreenMaxA > this.hh3d ? this.hh3d : zScreenMaxA;
+        zScreenMinA = zScreenMinA < bounds.bottom ? bounds.bottom : zScreenMinA;
+        zScreenMinA = zScreenMinA > bounds.top ? bounds.top : zScreenMinA;
+        zScreenMaxA = zScreenMaxA < bounds.bottom ? bounds.bottom : zScreenMaxA;
+        zScreenMaxA = zScreenMaxA > bounds.top ? bounds.top : zScreenMaxA;
         var maxz = Math.max(zScreenMinA, zScreenMaxA);
         for (var sz = Math.min(zScreenMinA, zScreenMaxA); sz < maxz; sz++) {
             var y = ((-this.camera.z + height) * tanH * (1 / sz)) | 0;
             var min = this.mins[y];
             var max = this.maxs[y];
-            //localContext.fillStyle = "white";
-            //localContext.fillRect(hw + min, hh - y, max - min, 1);
-            var xMinScreen = min * (1 / y) * tanW;
-            var xMaxScreen = max * (1 / y) * tanW;
-            xMinScreen = xMinScreen < -this.hw3d ? -this.hw3d : xMinScreen;
-            xMinScreen = xMinScreen > this.hw3d ? this.hw3d : xMinScreen;
-            xMaxScreen = xMaxScreen < -this.hw3d ? -this.hw3d : xMaxScreen;
-            xMaxScreen = xMaxScreen > this.hw3d ? this.hw3d : xMaxScreen;
+            var xMinScreen = Math.max(min * (1 / y) * tanW, bounds.left);
+            var xMaxScreen = Math.min(max * (1 / y) * tanW, bounds.right);
             var prevColorInt = null;
             var prevColor = null;
             var prevSize = 0;
@@ -181,7 +171,7 @@ class Sector {
         }
     }
     
-    drawWall(yBuffer, line, down, up) {
+    drawWall(yBuffer, line, down, up, bounds) {
         var tanW = this.tan * this.hw3d;
         var tanH = this.tan * this.hh3d;
         var x = line.intersectA.x;
@@ -221,13 +211,17 @@ class Sector {
         var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
         var lineWidth = 2;
         var max = Math.max(sxAUp, sxBUp);
-        for (var e = Math.min(sxAUp, sxBUp); e < max; e += lineWidth) {
+        max = Math.min(max, bounds.right);
+        var min = Math.min(sxAUp, sxBUp);
+        for (var e = Math.max(min, bounds.left); e < max; e += lineWidth) {
             var top = upSlope * e + upSlope * -sxAUp + szAUp;
             var bottom = downSlope * e + downSlope * -sxADown + szADown;
             var newy = top == 0 ? screenToLocalDown / bottom : screenToLocalUp / top;
             var newx = e / (1 / newy * tanW);
             var texRatio = Math.abs((newx - startPos.x) * line.localDiff.x + (newy - startPos.y) * line.localDiff.y) / dotProj;
-            yBuffer.push({'height': top - bottom + 1, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth, 'order': newy, 'img': 1, 'texratio': texRatio});
+            if ((top >= bounds.bottom && top <= bounds.top) || (bottom >= bounds.bottom && bottom <= bounds.top) || (bottom <= bounds.bottom && top >= bounds.top)) {
+                yBuffer.push({'height': top - bottom + 1, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth, 'order': newy, 'img': 1, 'texratio': texRatio});
+            }
         } 
     }
 
