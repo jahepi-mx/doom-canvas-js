@@ -227,7 +227,7 @@ class Sector {
             var newy = top == 0 ? screenToLocalDown / bottom : screenToLocalUp / top;
             var newx = e / (1 / newy * tanW);
             var texRatio = Math.abs((newx - startPos.x) * line.localDiff.x + (newy - startPos.y) * line.localDiff.y) / dotProj;
-            yBuffer.push({'height': top - bottom, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth, 'order': newy, 'img': 1, 'texratio': texRatio});
+            yBuffer.push({'height': top - bottom + 1, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth, 'order': newy, 'img': 1, 'texratio': texRatio});
         } 
     }
 
