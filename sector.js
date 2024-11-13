@@ -48,10 +48,10 @@ class Sector {
         for (let position of this.positions) {
             this.localPositions.push(this.player.convertToLocal(position.x, position.y, true));
         }
-        this.interpolate();
+        if (this.hasFloor || this.hasCeiling) this.getFloorCeilingLocalPositions();
     }
 
-    interpolate() {
+    getFloorCeilingLocalPositions() {
         this.mins = [];
         this.maxs = [];
         this.min = Number.MAX_VALUE;
