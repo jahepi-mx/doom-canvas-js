@@ -16,7 +16,7 @@ class Player {
         this.invYAxis = new Vector(0, 0);
 
         this.fovDegrees = 45;
-        this.fovLen = 1500;
+        this.fovLen = 2500;
         this.fovLeft = null;
         this.fovRight = null;
         this.fovCenter = null;
