@@ -16,12 +16,14 @@ class Player {
         this.invYAxis = new Vector(0, 0);
 
         this.fovDegrees = 45;
-        this.fovLen = 2500;
+        this.fovLen = 2700;
         this.fovLeft = null;
         this.fovRight = null;
         this.fovCenter = null;
         this.wallSensor = null;
         this.canMove = false;
+
+        this.tmpLocalPos = new Vector(0, 0);
     }
 
     update(dt) {
@@ -56,30 +58,6 @@ class Player {
             this.position.x += this.yAxis.x * this.velocity.x * dt;
             this.position.y += this.yAxis.y * this.velocity.x * dt;
         }
-    }
-
-    render(context) {
-        var x = this.offset.x + this.position.x - this.size.x * 0.5;
-        var y = this.offset.y - (this.position.y + this.size.y * 0.5);
-        context.fillStyle = "red";
-        context.fillRect(x, y, this.size.x, this.size.y);
-
-        context.lineWidth = 2;
-        context.strokeStyle = 'red';
-
-        context.beginPath();
-        context.moveTo(this.offset.x + this.position.x, this.offset.y - this.position.y);
-        context.lineTo(this.offset.x + this.position.x + this.xAxis.x * 30, this.offset.y - (this.position.y + this.xAxis.y * 30));
-        context.stroke();
-
-        context.beginPath();
-        context.moveTo(this.offset.x + this.position.x, this.offset.y - this.position.y);
-        context.lineTo(this.offset.x + this.position.x + this.yAxis.x * 30, this.offset.y - (this.position.y + this.yAxis.y * 30));
-        context.stroke();
-
-        this.fovLeft.render(context);
-        this.fovRight.render(context);
-        this.fovCenter.render(context);
     }
 
     localRender(context) {
@@ -122,10 +100,8 @@ class Player {
     convertToWorld(x, y) {
         //x.x * x, x.y * x
         //y.x * y, y.y * y
-        var nx = x * this.xAxis.x + y * this.yAxis.x;
-        var ny = x * this.xAxis.y + y * this.yAxis.y;
-        nx += this.position.x;
-        ny += this.position.y;
-        return new Vector(nx | 0, ny | 0);
+        this.tmpLocalPos.x = (x * this.xAxis.x + y * this.yAxis.x) + this.position.x;
+        this.tmpLocalPos.y = (x * this.xAxis.y + y * this.yAxis.y) + this.position.y;
+        return this.tmpLocalPos;
     }
 }

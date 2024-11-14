@@ -1,13 +1,13 @@
-#sectors | id | floor z pos| sector height| player z pos | has floor | has ceiling | add to stack |
-1,0,300,0,true,true,true
-2,0,40,20,false,true,false
-3,0,80,50,false,true,false
-4,0,120,70,false,true,false
-5,120,180,70,true,true,true
-6,120,250,70,true,true,true
-7,120,200,120,false,false,false
-8,120,100,120,false,true,false
-9,120,170,120,false,true,false
+#sectors | id | floor z pos| sector height| player z pos | floor texture | ceiling texture | add to stack |
+1,0,300,0,1,1,true
+2,0,40,20,0,1,false
+3,0,80,50,0,1,false
+4,0,120,70,0,1,false
+5,120,180,70,1,1,true
+6,120,250,70,2,1,true
+7,120,200,120,0,0,false
+8,120,100,120,0,1,false
+9,120,170,120,0,1,false
 #walls | sector id | x | y | color | wall bottom height | wall top height | wall obstructed | draw | connected sector |
 1,-300,150,yellow,0,0,true,true,null
 1,-250,200,cyan,0,0,true,true,null

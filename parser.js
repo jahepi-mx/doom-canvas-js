@@ -1,6 +1,6 @@
 class Parser {
 
-    constructor(player, camZOffset, tan, hw3d, hh3d, hw, hh, stack, floorImgData) {
+    constructor(player, camZOffset, tan, hw3d, hh3d, hw, hh, stack, textureManager) {
         this.sectors = new Map();
         this.player = player;
         this.camZOffset = camZOffset;
@@ -10,7 +10,7 @@ class Parser {
         this.hw = hw;
         this.hh = hh;
         this.stack = stack;
-        this.floorImgData = floorImgData;
+        this.textureManager = textureManager;
     }
 
     load() {
@@ -35,12 +35,18 @@ class Parser {
                     var floorZPos = parseInt(line[1].trim());
                     var height = parseInt(line[2].trim());
                     var playerZPos = parseInt(line[3].trim());
-                    var hasFloor = line[4].trim() == "true";
-                    var hasCeiling = line[5].trim() == "true";
+                    var hasFloor = line[4].trim() != "0";
+                    var hasCeiling = line[5].trim() != "0";
                     var inStack = line[6].trim() == "true";
                     this.sectors.set(id, new Sector(id, this.player, this.camZOffset, floorZPos, height, this.tan, this.hw3d, this.hh3d, this.hw, this.hh, playerZPos));
                     this.sectors.get(id).hasFloor = hasFloor;
                     this.sectors.get(id).hasCeiling = hasCeiling;
+                    if (hasFloor) {
+                        this.sectors.get(id).floorTexture = this.textureManager.get(line[4].trim());
+                    }
+                    if (hasCeiling) {
+                        this.sectors.get(id).ceilingTexture = this.textureManager.get(line[5].trim());
+                    }
                     if (inStack) {
                         this.stack.sectors.push(this.sectors.get(id));
                     }
@@ -74,12 +80,6 @@ class Parser {
                     this.sectors.get(wall.id).add(wall.x, wall.y, nextWall.x, nextWall.y, wall.color, wall.bottom, wall.top, wall.obstructed, wall.draw, wall.sector == "null" ? null : this.sectors.has(parseInt(wall.sector)) ? this.sectors.get(parseInt(wall.sector)) : null);
                 }
             }, this);
-            this.sectors.forEach(function(value, key, map) {
-                if (value.hasFloor || value.hasCeiling) {
-                    value.loadFloorCeilingTextureData(this.floorImgData);
-                }
-            }, this);
-            console.log(this.sectors);
         }).catch((e) => console.error(e));
     }
 }

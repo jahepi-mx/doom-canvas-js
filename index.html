@@ -9,13 +9,13 @@
 <script src="player.js"></script>
 <script src="stack.js"></script>
 <script src="parser.js"></script>
+<script src="texture.js"></script>
+<script src="texturemanager.js"></script>
 <script>
 var w = 500;
 var h = 500;
 var hw = w * 0.5;
 var hh = h * 0.5;
-var canvas = null;
-var context = null;
 var localCanvas = null;
 var localContext = null;
 var canvas3d = null;
@@ -32,17 +32,13 @@ var zCamOffset = 100;
 var stack = new Stack();
 var bound = {"left": -hw3d, "right": hw3d, "top": hh3d, "bottom": -hh3d}
 var parser = null;
+var textureManager = new TextureManager();
 //Perpective
 var tan = 0;
 var camZOffset = new Vector(0, 0);
-var camUp = camDown = false;
 var yBuffer = [];
 
 window.onload = function() {
-    canvas = document.getElementById("canvas");
-    context = canvas.getContext("2d");
-    canvas.width = w;
-    canvas.height = h;
     localCanvas = document.getElementById("localCanvas");
     localContext = localCanvas.getContext("2d");
     localCanvas.width = w;
@@ -56,12 +52,22 @@ window.onload = function() {
     var canvas = document.getElementById("floorCanvas");
     var floorContext = document.getElementById("floorCanvas").getContext("2d");
     floorContext.drawImage(document.getElementById("floor"), 0, 0);
-    var floorImgData = floorContext.getImageData(0, 0, canvas.width, canvas.height);
+
+    var canvas2 = document.getElementById("floorCanvas2");
+    var floorContext2 = document.getElementById("floorCanvas2").getContext("2d");
+    floorContext2.drawImage(document.getElementById("floor2"), 0, 0);
     
+    var floorTexture1 = new Texture();
+    floorTexture1.loadTextureData(floorContext.getImageData(0, 0, canvas.width, canvas.height));
+    var floorTexture2 = new Texture();
+    floorTexture2.loadTextureData(floorContext2.getImageData(0, 0, canvas2.width, canvas2.height));
+    textureManager.add("1", floorTexture1);
+    textureManager.add("2", floorTexture2);
+
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
     camZOffset.z = zCamOffset;
 
-    parser = new Parser(player, camZOffset, tan, hw3d, hh3d, hw, hh, stack, floorImgData);
+    parser = new Parser(player, camZOffset, tan, hw3d, hh3d, hw, hh, stack, textureManager);
     parser.load();
 
     image = new Image(50, 50);
@@ -81,8 +87,6 @@ function onKeyDown(key) {
         case 65: player.left = true; break;
         case 68: player.right = true; break;
         case 87: player.up = true; break;
-        case 38: camUp = true; break;
-        case 40: camDown = true; break;
     }
 }
 
@@ -91,8 +95,6 @@ function onKeyUp(key) {
         case 65: player.left = false; break;
         case 68: player.right = false; break;
         case 87: player.up = false; break;
-        case 38: camUp = false; break;
-        case 40: camDown = false; break;
     }
 }
 
@@ -100,8 +102,6 @@ function render(time) {
     var dt = (time - lastTime) / 1000;
     var fps = 1 / dt;
     //console.log(fps);
-    context.imageSmoothingEnabled = false;
-    context.clearRect(0, 0, w, h);
     localContext.imageSmoothingEnabled = false;
     localContext.clearRect(0, 0, w, h);
     context3d.imageSmoothingEnabled = false;
@@ -113,15 +113,12 @@ function render(time) {
         //return;
     }
 
-    //camZOffset.z += camUp ? 50 * dt : 0;
-    //camZOffset.z += camDown ? -50 * dt : 0;
     camZOffset.z = zCamOffset + zCam;
 
     player.update(dt);
-    player.render(context);
     player.localRender(localContext);
     yBuffer = [];
-    stack.run(dt, yBuffer, bound);
+    stack.run(dt, yBuffer, bound, localContext);
     player.canMove = stack.canMove;
     zCam = stack.zCam;
     //console.log(yBuffer.length);
@@ -149,12 +146,14 @@ function render(time) {
 </head>
 <body>
 
-<canvas id="canvas" style="background-color: black;"></canvas>
 <canvas id="localCanvas" style="background-color: black;"></canvas>
 <canvas id="3dCanvas" style="background-color: #87ceeb;"></canvas>
 
 <img id="floor" src="floor.png" width="50" height="50" style="display: none;">
 <canvas id="floorCanvas" width="50" height="50" style="display: none;"></canvas>
+
+<img id="floor2" src="floor2.png" width="80" height="80" style="display: none;">
+<canvas id="floorCanvas2" width="80" height="80" style="display: none;"></canvas>
 
 </canvas>
 </body>

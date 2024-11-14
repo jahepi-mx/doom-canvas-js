@@ -30,8 +30,8 @@ class Sector {
         this.maxx = Number.MIN_VALUE;
         this.miny = Number.MAX_VALUE;
         this.maxy = Number.MIN_VALUE;
-        this.texcolors = [];
-        this.texcolorsints = [];
+        this.floorTexture = null;
+        this.ceilingTexture = null;
     }
 
     add(x1, y1, x2, y2, color, floor, ceiling, isWall, draw, connectedSector) {
@@ -95,14 +95,13 @@ class Sector {
         }
     }
 
-    render(yBuffer, context, localContext, stack, bounds) {
+    render(yBuffer, localContext, stack, bounds) {
         var hasIntersections = false;
         this.collided = false;
         this.isInside = true;
         var sign = null;
         for (let line of this.lines) {
             line.update(0);
-            line.render(context);
             line.localRender(localContext);
             var cross = line.cross();
             sign = sign == null ? cross >= 0 : sign;
@@ -125,12 +124,12 @@ class Sector {
         if (!hasIntersections) {
             return;
         }
-        if (this.hasCeiling) this.drawSurface(yBuffer, this.zUp, bounds);
-        if (this.hasFloor) this.drawSurface(yBuffer, this.zBottom, bounds);
+        if (this.hasCeiling) this.drawSurface(yBuffer, this.zUp, bounds, this.ceilingTexture);
+        if (this.hasFloor) this.drawSurface(yBuffer, this.zBottom, bounds, this.floorTexture);
     }
     /* The idea behind this is to get the Z screen coordinates, which represent the screen height. We then loop through that range, retrieving the Y world coordinate (depth) and the X world coordinate, 
        and convert them to X screen coordinates. As we loop through this range, we convert each pixel back to world coordinates to get the color of the texture. */
-    drawSurface(yBuffer, height, bounds) {
+    drawSurface(yBuffer, height, bounds, texture) {
         var tanH = this.tan * this.hh3d;
         var tanW = this.tan * this.hw3d;
         var zScreenMinA = (-this.camera.z + height) * (1 / this.min) * tanH;
@@ -154,9 +153,11 @@ class Sector {
             for (var xScreen = xMinScreen; xScreen <= xMaxScreen; xScreen++) {
                 var x = xScreen / ((1 / y) * tanW);
                 var world = this.player.convertToWorld(x, y);
-                var index = (world.y - this.miny) * (this.maxx - this.minx) + (world.x - this.minx);
-                var color = this.texcolors[index];
-                var colorint = this.texcolorsints[index];
+                var texx = ((world.x - this.minx) / (this.maxx - this.minx) * texture.width) | 0; 
+                var texy = ((world.y - this.miny) / (this.maxy - this.miny) * texture.height) | 0;
+                var index = texy * texture.width + texx;
+                var color = texture.texcolors[index];
+                var colorint = texture.texcolorsints[index];
                 if (prevColorInt != colorint && xScreen > xMinScreen) {
                     draws.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1});
                     prevX = xScreen;
@@ -223,19 +224,5 @@ class Sector {
                 yBuffer.push({'height': top - bottom + 1, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth, 'order': newy, 'img': 1, 'texratio': texRatio});
             }
         } 
-    }
-
-    loadFloorCeilingTextureData(imageData) {
-        for (var x = this.minx; x <= this.maxx; x++) {
-            for (var y = this.miny; y <= this.maxy; y++) {
-                var rx = (x - this.minx) / (this.maxx - this.minx);
-                var ry = (y - this.miny) / (this.maxy - this.miny);
-                var ix = (imageData.width * rx) | 0;
-                var iy = (imageData.height * ry) | 0;
-                var i = (iy * imageData.width + ix) * 4;
-                this.texcolorsints[(y - this.miny) * (this.maxx - this.minx) + (x - this.minx)] = imageData.data[i] << 16 | imageData.data[i + 1] << 8 | imageData.data[i + 2];
-                this.texcolors[(y - this.miny) * (this.maxx - this.minx) + (x - this.minx)] = "#" + (1 << 24 | imageData.data[i] << 16 | imageData.data[i + 1] << 8 | imageData.data[i + 2]).toString(16).slice(1);
-            }
-        }
     }
 }
