@@ -40,7 +40,7 @@
 6,1550,350,yellow,0,0,true,true,null
 6,1550,-350,pink,0,0,true,true,null
 6,650,-350,green,0,0,true,true,null
-6,650,-150,yellow,0,0,false,false,5
+6,650,-150,yellow,0,80,false,true,5
 7,1000,-100,orange,0,0,true,true,null
 7,1200,-100,red,0,0,true,true,null
 7,1300,-200,yellow,0,0,true,true,null
