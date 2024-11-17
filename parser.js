@@ -61,10 +61,11 @@ class Parser {
                     var obstructed = line[6].trim() == "true";
                     var draw = line[7].trim() == "true";
                     var connectedSector = line[8].trim();
+                    var wallTexture = line[9].trim();
                     if (!wallsData.has(id)) {
                         wallsData.set(id, []);
                     }
-                    wallsData.get(id).push({"id": id, "x": x, "y": y, "color": color, "bottom": bottomHeight, "top": topHeight, "obstructed": obstructed, "draw": draw, "sector": connectedSector});
+                    wallsData.get(id).push({"id": id, "x": x, "y": y, "color": color, "bottom": bottomHeight, "top": topHeight, "obstructed": obstructed, "draw": draw, "sector": connectedSector, "wallTexture": wallTexture});
                 }
                 if (type == "subsectors") {
                     var idA = parseInt(line[0].trim());
@@ -77,7 +78,7 @@ class Parser {
                 for (var i = 0; i < len; i++) {
                     var wall = value[i];
                     var nextWall = value[(i + 1) % len];
-                    this.sectors.get(wall.id).add(wall.x, wall.y, nextWall.x, nextWall.y, wall.color, wall.bottom, wall.top, wall.obstructed, wall.draw, wall.sector == "null" ? null : this.sectors.has(parseInt(wall.sector)) ? this.sectors.get(parseInt(wall.sector)) : null);
+                    this.sectors.get(wall.id).add(wall.x, wall.y, nextWall.x, nextWall.y, wall.color, wall.bottom, wall.top, wall.obstructed, wall.draw, wall.sector == "null" ? null : this.sectors.has(parseInt(wall.sector)) ? this.sectors.get(parseInt(wall.sector)) : null, this.textureManager.get(wall.wallTexture));
                 }
             }, this);
         }).catch((e) => console.error(e));

@@ -34,8 +34,8 @@ class Sector {
         this.ceilingTexture = null;
     }
 
-    add(x1, y1, x2, y2, color, floor, ceiling, isWall, draw, connectedSector) {
-        this.lines.push(new Line(this.hw, this.hh, x1, y1, x2, y2, color, this.player, this.zBottom, this.height, floor, ceiling, isWall, draw, connectedSector));
+    add(x1, y1, x2, y2, color, floor, ceiling, isWall, draw, connectedSector, texture) {
+        this.lines.push(new Line(this.hw, this.hh, x1, y1, x2, y2, color, this.player, this.zBottom, this.height, floor, ceiling, isWall, draw, connectedSector, texture));
         this.minx = Math.min(x1, this.minx);
         this.maxx = Math.max(x1, this.maxx);
         this.miny = Math.min(y1, this.miny);
@@ -95,7 +95,7 @@ class Sector {
         }
     }
 
-    render(yBuffer, localContext, stack, bounds) {
+    render(localContext, stack, bounds, imageData, sort) {
         var hasIntersections = false;
         this.collided = false;
         this.isInside = true;
@@ -116,20 +116,20 @@ class Sector {
                 line.intersectB.z += line.z;
                 this.collided =  line.isWall && line.intersect(this.player.wallSensor) != null ? true : this.collided;
                 if (line.connectedSector != null) stack.addSector(line.connectedSector, line.getBounds(this.tan * this.hw3d, this.tan * this.hh3d, -this.hw3d, this.hw3d, this.hh3d, -this.hh3d));
-                if (line.draw && line.floor == 0 && line.ceiling == 0) this.drawWall(yBuffer, line, 0, line.height, bounds);
-                if (line.draw && line.floor > 0) this.drawWall(yBuffer, line, 0, line.floor, bounds);
-                if (line.draw && line.ceiling > 0) this.drawWall(yBuffer, line, line.height - line.ceiling, line.height, bounds);
+                if (line.draw && line.floor == 0 && line.ceiling == 0) this.drawWall(line, 0, line.height, bounds, imageData, sort);
+                if (line.draw && line.floor > 0) this.drawWall(line, 0, line.floor, bounds, imageData, sort);
+                if (line.draw && line.ceiling > 0) this.drawWall(line, line.height - line.ceiling, line.height, bounds, imageData, sort);
             }
         }
         if (!hasIntersections) {
             return;
         }
-        if (this.hasCeiling) this.drawSurface(yBuffer, this.zUp, bounds, this.ceilingTexture);
-        if (this.hasFloor) this.drawSurface(yBuffer, this.zBottom, bounds, this.floorTexture);
+        if (this.hasCeiling) this.drawSurface(this.zUp, bounds, this.ceilingTexture, imageData, sort);
+        if (this.hasFloor) this.drawSurface(this.zBottom, bounds, this.floorTexture, imageData, sort);
     }
     /* The idea behind this is to get the Z screen coordinates, which represent the screen height. We then loop through that range, retrieving the Y world coordinate (depth) and the X world coordinate, 
        and convert them to X screen coordinates. As we loop through this range, we convert each pixel back to world coordinates to get the color of the texture. */
-    drawSurface(yBuffer, height, bounds, texture) {
+    drawSurface(height, bounds, texture, imageData, sort) {
         var tanH = this.tan * this.hh3d;
         var tanW = this.tan * this.hw3d;
         var zScreenMinA = (-this.camera.z + height) * (1 / this.min) * tanH;
@@ -139,40 +139,35 @@ class Sector {
         zScreenMaxA = zScreenMaxA < bounds.bottom ? bounds.bottom : zScreenMaxA;
         zScreenMaxA = zScreenMaxA > bounds.top ? bounds.top : zScreenMaxA;
         var maxz = Math.max(zScreenMinA, zScreenMaxA);
-        for (var sz = Math.min(zScreenMinA, zScreenMaxA); sz < maxz; sz++) {
+        for (var sz = Math.min(zScreenMinA, zScreenMaxA); sz <= maxz; sz++) {
             var y = ((-this.camera.z + height) * tanH * (1 / sz)) | 0;
             var min = this.mins[y];
             var max = this.maxs[y];
             var xMinScreen = Math.max(min * (1 / y) * tanW, bounds.left);
             var xMaxScreen = Math.min(max * (1 / y) * tanW, bounds.right);
-            var prevColorInt = null;
-            var prevColor = null;
-            var prevSize = 0;
-            var prevX = xMinScreen;
-            var draws = [];
-            for (var xScreen = xMinScreen; xScreen <= xMaxScreen; xScreen++) {
+            for (var xScreen = xMinScreen; xScreen < xMaxScreen; xScreen++) {
                 var x = xScreen / ((1 / y) * tanW);
                 var world = this.player.convertToWorld(x, y);
                 var texx = ((world.x - this.minx) / (this.maxx - this.minx) * texture.width) | 0; 
                 var texy = ((world.y - this.miny) / (this.maxy - this.miny) * texture.height) | 0;
-                var index = texy * texture.width + texx;
-                var color = texture.texcolors[index];
-                var colorint = texture.texcolorsints[index];
-                if (prevColorInt != colorint && xScreen > xMinScreen) {
-                    draws.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1});
-                    prevX = xScreen;
-                    prevSize = 0;
+                var index = texture.getIndex(texx, texy);
+                var texx2 = this.hw3d + xScreen | 0;
+                var texy2 = this.hh3d - sz | 0;
+                var index2 = texy2 * (this.hw3d * 2) + texx2;
+                if (y < sort[index2]) {
+                    sort[index2] = y;
+                    index2 *= 4;
+                    var darkness = 1 - (x * x + y * y) / (1400 * 1400);
+                    imageData[index2] = texture.imageData[index] * darkness;
+                    imageData[index2 + 1] = texture.imageData[index + 1] * darkness;
+                    imageData[index2 + 2] = texture.imageData[index + 2] * darkness;
+                    imageData[index2 + 3] = texture.imageData[index + 3];
                 }
-                prevSize++;
-                prevColorInt = colorint;
-                prevColor = color;
             }
-            draws.push({'height': 2, 'x': prevX, 'z': sz, 'color': prevColor, 'width': prevSize + 1});
-            yBuffer.push({'order': y, 'img': 0, 'data': draws});
         }
     }
     
-    drawWall(yBuffer, line, down, up, bounds) {
+    drawWall(line, down, up, bounds, imageData, sort) {
         var tanW = this.tan * this.hw3d;
         var tanH = this.tan * this.hh3d;
         var x = line.intersectA.x;
@@ -210,18 +205,33 @@ class Sector {
         var screenToLocalDown = (prevZ + down) * tanH;
         var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
         var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
-        var lineWidth = 2;
         var max = Math.max(sxAUp, sxBUp);
         max = Math.min(max, bounds.right);
         var min = Math.min(sxAUp, sxBUp);
-        for (var e = Math.max(min, bounds.left); e < max; e += lineWidth) {
+        for (var e = Math.max(min, bounds.left); e <= max; e++) {
             var top = upSlope * e + upSlope * -sxAUp + szAUp;
             var bottom = downSlope * e + downSlope * -sxADown + szADown;
             var newy = top == 0 ? screenToLocalDown / bottom : screenToLocalUp / top;
             var newx = e / (1 / newy * tanW);
+            var darkness = 1 - (newx * newx + newy * newy) / (1400 * 1400);
             var texRatio = Math.abs((newx - startPos.x) * line.localDiff.x + (newy - startPos.y) * line.localDiff.y) / dotProj;
-            if ((top >= bounds.bottom && top <= bounds.top) || (bottom >= bounds.bottom && bottom <= bounds.top) || (bottom <= bounds.bottom && top >= bounds.top)) {
-                yBuffer.push({'height': top - bottom + 1, 'x': e, 'z': top, 'color': line.color, 'width': lineWidth, 'order': newy, 'img': 1, 'texratio': texRatio});
+            var top2 = Math.min(bounds.top, top);
+            var bottom2 = Math.max(bounds.bottom, bottom);
+            var texx = (line.texture.width * texRatio) | 0;
+            for (var zz = bottom2; zz < top2; zz++) {
+                var texy = ((top - zz) / (top - bottom) * line.texture.height) | 0;
+                var index = line.texture.getIndex(texx, texy);
+                var texx2 = this.hw3d + e | 0;
+                var texy2 = this.hh3d - zz | 0;
+                var index2 = texy2 * (this.hw3d * 2) + texx2;
+                if (newy < sort[index2]) {
+                    sort[index2] = newy;
+                    index2 *= 4;
+                    imageData[index2] = line.texture.imageData[index] * darkness;
+                    imageData[index2 + 1] = line.texture.imageData[index + 1] * darkness;
+                    imageData[index2 + 2] = line.texture.imageData[index + 2] * darkness;
+                    imageData[index2 + 3] = line.texture.imageData[index + 3];
+                }
             }
         } 
     }

@@ -37,6 +37,8 @@ var textureManager = new TextureManager();
 var tan = 0;
 var camZOffset = new Vector(0, 0);
 var yBuffer = [];
+var imageData = null;
+let sort = new Array(this.hw3d * this.hh3d * 4);
 
 window.onload = function() {
     localCanvas = document.getElementById("localCanvas");
@@ -47,22 +49,27 @@ window.onload = function() {
     context3d = canvas3d.getContext("2d");
     canvas3d.width = width3d;
     canvas3d.height = height3d;
+    imageData = context3d.createImageData(width3d, height3d);
     player = new Player(hw, hh);
 
     var canvas = document.getElementById("floorCanvas");
-    var floorContext = document.getElementById("floorCanvas").getContext("2d");
+    var floorContext = canvas.getContext("2d");
     floorContext.drawImage(document.getElementById("floor"), 0, 0);
 
     var canvas2 = document.getElementById("floorCanvas2");
-    var floorContext2 = document.getElementById("floorCanvas2").getContext("2d");
+    var floorContext2 = canvas2.getContext("2d");
     floorContext2.drawImage(document.getElementById("floor2"), 0, 0);
+
+    var canvas3 = document.getElementById("wallCanvas");
+    var wallContext = canvas3.getContext("2d");
+    wallContext.drawImage(document.getElementById("wall"), 0, 0);
     
-    var floorTexture1 = new Texture();
-    floorTexture1.loadTextureData(floorContext.getImageData(0, 0, canvas.width, canvas.height));
-    var floorTexture2 = new Texture();
-    floorTexture2.loadTextureData(floorContext2.getImageData(0, 0, canvas2.width, canvas2.height));
+    var floorTexture1 = new Texture(floorContext.getImageData(0, 0, canvas.width, canvas.height));
+    var floorTexture2 = new Texture(floorContext2.getImageData(0, 0, canvas2.width, canvas2.height));
+    var wallTexture = new Texture(wallContext.getImageData(0, 0, canvas3.width, canvas3.height));
     textureManager.add("1", floorTexture1);
     textureManager.add("2", floorTexture2);
+    textureManager.add("wall", wallTexture);
 
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
     camZOffset.z = zCamOffset;
@@ -108,6 +115,8 @@ function render(time) {
     context3d.clearRect(0, 0, width3d, height3d);
     lastTime = time;
 
+    sort.fill(Number.MAX_VALUE);
+
     if (fps < 3) {
         //requestAnimationFrame(render);
         //return;
@@ -118,23 +127,11 @@ function render(time) {
     player.update(dt);
     player.localRender(localContext);
     yBuffer = [];
-    stack.run(dt, yBuffer, bound, localContext);
+    stack.run(dt, bound, localContext, imageData.data, sort);
     player.canMove = stack.canMove;
     zCam = stack.zCam;
-    //console.log(yBuffer.length);
-    yBuffer.sort((a, b) => b.order - a.order);
-    for (let obj of yBuffer) {
-        if (obj.img == 1) {
-            context3d.drawImage(image, (obj.texratio * image.width) | 0, 0, 1, image.height, hw3d + obj.x, hh3d - obj.z, obj.width + 1, obj.height)
-            context3d.fillStyle = "rgba(0,0,0," + (obj.order / 800) + ")";
-            context3d.fillRect(hw3d + obj.x, hh3d - obj.z, obj.width, obj.height);
-        } else {
-            for (let data of obj.data) {
-                context3d.fillStyle = data.color;
-                context3d.fillRect(hw3d + data.x, hh3d - data.z, data.width, data.height);
-            }
-        }
-    }
+
+    context3d.putImageData(imageData, 0, 0);
     context3d.font = "14px Arial";
     context3d.fillStyle = "#74ff33";
     context3d.fillText(fps | 0, width3d - 20, 20);
@@ -148,6 +145,9 @@ function render(time) {
 
 <canvas id="localCanvas" style="background-color: black;"></canvas>
 <canvas id="3dCanvas" style="background-color: #87ceeb;"></canvas>
+
+<img id="wall" src="wall.png" width="50" height="50" style="display: none;">
+<canvas id="wallCanvas" width="50" height="50" style="display: none;"></canvas>
 
 <img id="floor" src="floor.png" width="50" height="50" style="display: none;">
 <canvas id="floorCanvas" width="50" height="50" style="display: none;"></canvas>

@@ -8,7 +8,7 @@ class Stack {
         this.canMove = true;
     }
 
-    run(dt, yBuffer, bounds, localContext) {
+    run(dt, bounds, localContext, imageData, sort) {
         this.stack = [];
         this.bounds = [];
         for (let sector of this.sectors) {
@@ -32,7 +32,7 @@ class Stack {
         while (this.stack.length > 0) {
             var sector = this.stack.pop();
             sector.update(dt);
-            sector.render(yBuffer, localContext, this, this.bounds[sector.id]);
+            sector.render(localContext, this, this.bounds[sector.id], imageData, sort);
             this.canMove = this.canMove && !sector.collided;
             this.zCam = sector.isInside ? Math.max(this.zCam, sector.zCam) : this.zCam;
         }
