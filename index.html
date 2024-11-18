@@ -22,8 +22,8 @@ var canvas3d = null;
 var context3d = null;
 var lastTime = 0;
 var player = null;
-var width3d = 300;
-var height3d = 300;
+var width3d = 640;
+var height3d = 480;
 var hw3d = width3d * 0.5;
 var hh3d = height3d * 0.5;
 var image = null;
@@ -36,7 +36,6 @@ var textureManager = new TextureManager();
 //Perpective
 var tan = 0;
 var camZOffset = new Vector(0, 0);
-var yBuffer = [];
 var imageData = null;
 let sort = new Array(this.hw3d * this.hh3d * 4);
 
@@ -126,7 +125,6 @@ function render(time) {
 
     player.update(dt);
     player.localRender(localContext);
-    yBuffer = [];
     stack.run(dt, bound, localContext, imageData.data, sort);
     player.canMove = stack.canMove;
     zCam = stack.zCam;
