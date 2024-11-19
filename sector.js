@@ -103,7 +103,7 @@ class Sector {
         for (let line of this.lines) {
             line.update(0);
             line.localRender(localContext);
-            var cross = line.cross();
+            var cross = line.cross(0);
             sign = sign == null ? cross >= 0 : sign;
             this.isInside = sign && cross < 0 ? false : this.isInside;
             this.isInside = !sign && cross >= 0 ? false : this.isInside;
@@ -114,7 +114,7 @@ class Sector {
                 line.intersectB.z -= this.camera.z;
                 line.intersectA.z += line.z;
                 line.intersectB.z += line.z;
-                this.collided =  line.isWall && line.intersect(this.player.wallSensor) != null ? true : this.collided;
+                this.collided = line.isWall && line.intersect(this.player.wallSensor) != null ? true : this.collided;
                 if (line.connectedSector != null) stack.addSector(line.connectedSector, line.getBounds(this.tan * this.hw3d, this.tan * this.hh3d, -this.hw3d, this.hw3d, this.hh3d, -this.hh3d));
                 if (line.draw && line.floor == 0 && line.ceiling == 0) this.drawWall(line, 0, line.height, bounds, imageData, sort);
                 if (line.draw && line.floor > 0) this.drawWall(line, 0, line.floor, bounds, imageData, sort);

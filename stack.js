@@ -16,7 +16,7 @@ class Stack {
             var isInside = true;
             for (let line of sector.lines) {
                 line.update(0);
-                var cross = line.cross();
+                var cross = line.cross(0);
                 sign = sign == null ? cross >= 0 : sign;
                 isInside = sign && cross < 0 ? false : isInside;
                 isInside = !sign && cross >= 0 ? false : isInside;
