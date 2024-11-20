@@ -103,10 +103,12 @@ class Sector {
         for (let line of this.lines) {
             line.update(0);
             line.localRender(localContext);
-            var cross = line.cross(0);
-            sign = sign == null ? cross >= 0 : sign;
-            this.isInside = sign && cross < 0 ? false : this.isInside;
-            this.isInside = !sign && cross >= 0 ? false : this.isInside;
+            var cross = line.cross();
+            if (Math.abs(cross) > stack.epsilon) {
+                sign = sign == null ? cross >= 0 : sign;
+                this.isInside = sign && cross < 0 ? false : this.isInside;
+                this.isInside = !sign && cross >= 0 ? false : this.isInside;
+            }
             if (line.hasIntersectionPoints()) {
                 hasIntersections = true;
                 line.intersectLocalRender(localContext);
@@ -176,7 +178,7 @@ class Sector {
         var prevX = line.intersectB.x;
         var prevY = line.intersectB.y;
         var prevZ = line.intersectB.z;
-    
+
         var sxAUp = prevX * (1 / prevY) * tanW;
         var szAUp = (prevZ + up) * (1 / prevY) * tanH;
         var sxBUp = x * (1 / y) * tanW;

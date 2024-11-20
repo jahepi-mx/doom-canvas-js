@@ -20,12 +20,10 @@ class Player {
         this.fovLeft = new Line(0, 0, 0, 0, 0, 0, 'green', this);
         this.fovRight = new Line(0, 0, 0, 0, 0, 0, 'green', this);
         this.fovTop = new Line(0, 0, 0, 0, 0, 0, 'green', this);
-        //this.fovBottom = new Line(0, 0, 0, 0, 0, 0, 'green', this);
         this.wallSensor = new Line(0, 0, 0, 0, 0, 0, 'pink', this);
         this.canMove = false;
 
         this.tmpLocalPos = new Vector(0, 0);
-        this.bottomRatio = 1 / Math.cos(this.fovDegrees * this.toRadians) * 2;
     }
 
     update(dt) {
@@ -49,26 +47,14 @@ class Player {
 
         var radL = (this.degrees + this.fovDegrees) * this.toRadians;
         var radR = (this.degrees - this.fovDegrees) * this.toRadians;
-        var cosL = Math.cos(radL);
-        var sinL = Math.sin(radL);
-        var cosR = Math.cos(radR);
-        var sinR = Math.sin(radR);
-        /*var bottomXL = this.position.x + cosL * this.bottomRatio;
-        var bottomYL = this.position.y + sinL * this.bottomRatio;
-        var bottomXR = this.position.x + cosR * this.bottomRatio;
-        var bottomYR = this.position.y + sinR * this.bottomRatio;*/
         
-        this.fovLeft.updateState(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + cosL * this.fovLen, this.position.y + sinL * this.fovLen);
-        this.fovRight.updateState(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + cosR * this.fovLen, this.position.y + sinR * this.fovLen);
-        //this.fovLeft.updateState(this.offset.x, this.offset.y, bottomXL, bottomYL, this.position.x + cosL * this.fovLen, this.position.y + sinL * this.fovLen);
-        //this.fovBottom.updateState(this.offset.x, this.offset.y, bottomXL, bottomYL, bottomXR, bottomYR);
-        //this.fovRight.updateState(this.offset.x, this.offset.y, bottomXR, bottomYR, this.position.x + cosR * this.fovLen, this.position.y + sinR * this.fovLen);
+        this.fovLeft.updateState(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + Math.cos(radL) * this.fovLen, this.position.y + Math.sin(radL) * this.fovLen);
+        this.fovRight.updateState(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + Math.cos(radR) * this.fovLen, this.position.y + Math.sin(radR) * this.fovLen);
         this.fovTop.updateState(this.offset.x, this.offset.y, this.fovLeft.position2.x, this.fovLeft.position2.y, this.fovRight.position2.x, this.fovRight.position2.y);
         this.wallSensor.updateState(this.offset.x, this.offset.y, this.position.x, this.position.y, this.position.x + this.yAxis.x * 10, this.position.y + this.yAxis.y * 10);
         this.fovLeft.update(dt);
         this.fovRight.update(dt);
         this.fovTop.update(dt);
-        //this.fovBottom.update(dt);
         this.wallSensor.update(dt);
 
         if (this.up && this.canMove) {
@@ -102,7 +88,6 @@ class Player {
         this.fovLeft.localRender(context);
         this.fovRight.localRender(context);
         this.fovTop.localRender(context);
-        //this.fovBottom.localRender(context);
     }
 
     convertToLocal(x, y, hasOffset) {

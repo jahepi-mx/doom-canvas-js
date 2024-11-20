@@ -73,10 +73,10 @@ class Line {
         context.fillRect(this.offset.x + this.intersectB.x - 3, this.offset.y - (this.intersectB.y + 3), 6, 6);
     }
 
-    cross(offsety) {
+    cross() {
         // this.localDiff.x, this.localDiff.y
         // 0 - this.localPosition1.x, 0 - this.localPosition1.y
-        return this.localDiff.x * (offsety - this.localPosition1.y) + this.localDiff.y * this.localPosition1.x;
+        return this.localDiff.x * -this.localPosition1.y + this.localDiff.y * this.localPosition1.x;
     }
 
     intersect(line) {
@@ -129,7 +129,6 @@ class Line {
             var degrees = Math.acos(this.localPosition2.x / len) * 180 / Math.PI;
             this.addIntersection(degrees >= 90 - this.player.fovDegrees && degrees <= 90 + this.player.fovDegrees ? this.localPosition2 : null);
         }
-        //this.addIntersection(this.player.fovBottom.intersect(this));
         if (this.intersectionCount >= 2) {
             this.intersectA = this.intersections[0];
             this.intersectB = this.intersections[this.intersectionCount - 1];
