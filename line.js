@@ -1,6 +1,6 @@
 class Line {
     
-    constructor(offsetx, offsety, x1, y1, x2, y2, color, player, zBottom, height, floor, ceiling, isWall, draw, connectedSector, texture) {
+    constructor(offsetx, offsety, x1, y1, x2, y2, color, player, zBottom, height, floor, ceiling, isWall, draw, connectedSector, textureTop, textureBottom) {
         this.position1 = new Vector(x1, y1);
         this.position2 = new Vector(x2, y2);
         this.localPosition1 = new Vector(0, 0);
@@ -24,7 +24,8 @@ class Line {
         this.isWall = isWall;
         this.connectedSector = connectedSector;
         this.draw = draw;
-        this.texture = texture;
+        this.textureTop = textureTop;
+        this.textureBottom = textureBottom;
     }
 
     updateState(offsetx, offsety, x1, y1, x2, y2) {

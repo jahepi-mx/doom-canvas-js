@@ -1,0 +1,7 @@
+#textures | file | id | Place textures inside textures folder
+floor.png,1
+floor2.png,2
+wall.png,wall
+wall2.jpg,wall2
+saturno.jpg,saturno
+stripe.png,stripe

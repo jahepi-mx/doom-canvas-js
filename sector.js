@@ -34,8 +34,8 @@ class Sector {
         this.ceilingTexture = null;
     }
 
-    add(x1, y1, x2, y2, color, floor, ceiling, isWall, draw, connectedSector, texture) {
-        this.lines.push(new Line(this.hw, this.hh, x1, y1, x2, y2, color, this.player, this.zBottom, this.height, floor, ceiling, isWall, draw, connectedSector, texture));
+    add(x1, y1, x2, y2, color, floor, ceiling, isWall, draw, connectedSector, textureTop, textureBottom) {
+        this.lines.push(new Line(this.hw, this.hh, x1, y1, x2, y2, color, this.player, this.zBottom, this.height, floor, ceiling, isWall, draw, connectedSector, textureTop, textureBottom));
         this.minx = Math.min(x1, this.minx);
         this.maxx = Math.max(x1, this.maxx);
         this.miny = Math.min(y1, this.miny);
@@ -118,9 +118,9 @@ class Sector {
                 line.intersectB.z += line.z;
                 this.collided = line.isWall && line.intersect(this.player.wallSensor) != null ? true : this.collided;
                 if (line.connectedSector != null) stack.addSector(line.connectedSector, line.getBounds(this.tan * this.hw3d, this.tan * this.hh3d, -this.hw3d, this.hw3d, this.hh3d, -this.hh3d));
-                if (line.draw && line.floor == 0 && line.ceiling == 0) this.drawWall(line, 0, line.height, bounds, imageData, sort);
-                if (line.draw && line.floor > 0) this.drawWall(line, 0, line.floor, bounds, imageData, sort);
-                if (line.draw && line.ceiling > 0) this.drawWall(line, line.height - line.ceiling, line.height, bounds, imageData, sort);
+                if (line.draw && line.floor == 0 && line.ceiling == 0) this.drawWall(line, 0, line.height, bounds, imageData, sort, line.textureBottom);
+                if (line.draw && line.floor > 0) this.drawWall(line, 0, line.floor, bounds, imageData, sort, line.textureBottom);
+                if (line.draw && line.ceiling > 0) this.drawWall(line, line.height - line.ceiling, line.height, bounds, imageData, sort, line.textureTop);
             }
         }
         if (!hasIntersections) {
@@ -169,7 +169,7 @@ class Sector {
         }
     }
     
-    drawWall(line, down, up, bounds, imageData, sort) {
+    drawWall(line, down, up, bounds, imageData, sort, texture) {
         var tanW = this.tan * this.hw3d;
         var tanH = this.tan * this.hh3d;
         var x = line.intersectA.x;
@@ -219,20 +219,20 @@ class Sector {
             var texRatio = Math.abs((newx - startPos.x) * line.localDiff.x + (newy - startPos.y) * line.localDiff.y) / dotProj;
             var top2 = Math.min(bounds.top, top);
             var bottom2 = Math.max(bounds.bottom, bottom);
-            var texx = (line.texture.width * texRatio) | 0;
+            var texx = (texture.width * texRatio) | 0;
             for (var zz = bottom2; zz < top2; zz++) {
-                var texy = ((top - zz) / (top - bottom) * line.texture.height) | 0;
-                var index = line.texture.getIndex(texx, texy);
+                var texy = ((top - zz) / (top - bottom) * texture.height) | 0;
+                var index = texture.getIndex(texx, texy);
                 var texx2 = this.hw3d + e | 0;
                 var texy2 = this.hh3d - zz | 0;
                 var index2 = texy2 * (this.hw3d * 2) + texx2;
                 if (newy < sort[index2]) {
                     sort[index2] = newy;
                     index2 *= 4;
-                    imageData[index2] = line.texture.imageData[index] * darkness;
-                    imageData[index2 + 1] = line.texture.imageData[index + 1] * darkness;
-                    imageData[index2 + 2] = line.texture.imageData[index + 2] * darkness;
-                    imageData[index2 + 3] = line.texture.imageData[index + 3];
+                    imageData[index2] = texture.imageData[index] * darkness;
+                    imageData[index2 + 1] = texture.imageData[index + 1] * darkness;
+                    imageData[index2 + 2] = texture.imageData[index + 2] * darkness;
+                    imageData[index2 + 3] = texture.imageData[index + 3];
                 }
             }
         } 

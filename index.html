@@ -26,13 +26,11 @@ var width3d = 640;
 var height3d = 400;
 var hw3d = width3d * 0.5;
 var hh3d = height3d * 0.5;
-var image = null;
 var zCam = 0;
 var zCamOffset = 100;
 var stack = new Stack();
 var bound = {"left": -hw3d, "right": hw3d, "top": hh3d, "bottom": -hh3d}
 var parser = null;
-var textureManager = new TextureManager();
 //Perpective
 var tan = 0;
 var camZOffset = new Vector(0, 0);
@@ -51,40 +49,15 @@ window.onload = function() {
     imageData = context3d.createImageData(width3d, height3d);
     player = new Player(hw, hh);
 
-    var canvas = document.getElementById("floorCanvas");
-    var floorContext = canvas.getContext("2d");
-    floorContext.drawImage(document.getElementById("floor"), 0, 0);
-
-    var canvas2 = document.getElementById("floorCanvas2");
-    var floorContext2 = canvas2.getContext("2d");
-    floorContext2.drawImage(document.getElementById("floor2"), 0, 0);
-
-    var canvas3 = document.getElementById("wallCanvas");
-    var wallContext = canvas3.getContext("2d");
-    wallContext.drawImage(document.getElementById("wall"), 0, 0);
-    
-    var floorTexture1 = new Texture(floorContext.getImageData(0, 0, canvas.width, canvas.height));
-    var floorTexture2 = new Texture(floorContext2.getImageData(0, 0, canvas2.width, canvas2.height));
-    var wallTexture = new Texture(wallContext.getImageData(0, 0, canvas3.width, canvas3.height));
-    textureManager.add("1", floorTexture1);
-    textureManager.add("2", floorTexture2);
-    textureManager.add("wall", wallTexture);
-
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
     camZOffset.z = zCamOffset;
 
-    parser = new Parser(player, camZOffset, tan, hw3d, hh3d, hw, hh, stack, textureManager);
-    parser.load();
-
-    image = new Image(50, 50);
-    image.onload = onLoadImage;
-    image.src = "wall.png";
+    parser = new Parser(player, camZOffset, tan, hw3d, hh3d, hw, hh, stack, document.getElementById("textureLoader"));
+    parser.loadTextures();
 
     document.onkeydown = onKeyDown;
     document.onkeyup = onKeyUp;
-}
 
-function onLoadImage() {
     render();
 }
         
@@ -117,8 +90,8 @@ function render(time) {
     sort.fill(Number.MAX_VALUE);
 
     if (fps < 3) {
-        //requestAnimationFrame(render);
-        //return;
+        requestAnimationFrame(render);
+        return;
     }
 
     camZOffset.z = zCamOffset + zCam;
@@ -144,15 +117,7 @@ function render(time) {
 <canvas id="localCanvas" style="background-color: black;"></canvas>
 <canvas id="3dCanvas" style="background-color: #87ceeb;"></canvas>
 
-<img id="wall" src="wall.png" width="50" height="50" style="display: none;">
-<canvas id="wallCanvas" width="50" height="50" style="display: none;"></canvas>
+<canvas id="textureLoader" width="1" height="1" style="display: none;"></canvas>
 
-<img id="floor" src="floor.png" width="50" height="50" style="display: none;">
-<canvas id="floorCanvas" width="50" height="50" style="display: none;"></canvas>
-
-<img id="floor2" src="floor2.png" width="80" height="80" style="display: none;">
-<canvas id="floorCanvas2" width="80" height="80" style="display: none;"></canvas>
-
-</canvas>
 </body>
 </html>
