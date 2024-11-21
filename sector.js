@@ -140,8 +140,8 @@ class Sector {
         zScreenMinA = zScreenMinA > bounds.top ? bounds.top : zScreenMinA;
         zScreenMaxA = zScreenMaxA < bounds.bottom ? bounds.bottom : zScreenMaxA;
         zScreenMaxA = zScreenMaxA > bounds.top ? bounds.top : zScreenMaxA;
-        var maxz = Math.max(zScreenMinA, zScreenMaxA);
-        for (var sz = Math.min(zScreenMinA, zScreenMaxA); sz <= maxz; sz++) {
+        var maxz = Math.max(zScreenMinA, zScreenMaxA) | 0;
+        for (var sz = Math.min(zScreenMinA, zScreenMaxA) | 0; sz <= maxz; sz++) {
             var y = ((-this.camera.z + height) * tanH * (1 / sz)) | 0;
             var min = this.mins[y];
             var max = this.maxs[y];
@@ -154,7 +154,7 @@ class Sector {
                 var texy = ((world.y - this.miny) / (this.maxy - this.miny) * texture.height) | 0;
                 var index = texture.getIndex(texx, texy);
                 var texx2 = this.hw3d + xScreen | 0;
-                var texy2 = this.hh3d - sz | 0;
+                var texy2 = this.hh3d - sz;
                 var index2 = texy2 * (this.hw3d * 2) + texx2;
                 if (y < sort[index2]) {
                     sort[index2] = y;
@@ -208,23 +208,23 @@ class Sector {
         var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
         var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
         var max = Math.max(sxAUp, sxBUp);
-        max = Math.min(max, bounds.right);
+        max = Math.floor(Math.min(max, bounds.right));
         var min = Math.min(sxAUp, sxBUp);
-        for (var e = Math.max(min, bounds.left); e <= max; e++) {
+        for (var e = Math.ceil(Math.max(min, bounds.left)); e <= max; e++) {
             var top = upSlope * e + upSlope * -sxAUp + szAUp;
             var bottom = downSlope * e + downSlope * -sxADown + szADown;
             var newy = top == 0 ? screenToLocalDown / bottom : screenToLocalUp / top;
             var newx = e / (1 / newy * tanW);
             var darkness = 1 - (newx * newx + newy * newy) / (1400 * 1400);
             var texRatio = Math.abs((newx - startPos.x) * line.localDiff.x + (newy - startPos.y) * line.localDiff.y) / dotProj;
-            var top2 = Math.min(bounds.top, top);
-            var bottom2 = Math.max(bounds.bottom, bottom);
+            var top2 = Math.floor(Math.min(bounds.top, top));
+            var bottom2 = Math.ceil(Math.max(bounds.bottom, bottom));
             var texx = (texture.width * texRatio) | 0;
-            for (var zz = bottom2; zz < top2; zz++) {
+            for (var zz = bottom2; zz <= top2; zz++) {
                 var texy = ((top - zz) / (top - bottom) * texture.height) | 0;
                 var index = texture.getIndex(texx, texy);
-                var texx2 = this.hw3d + e | 0;
-                var texy2 = this.hh3d - zz | 0;
+                var texx2 = this.hw3d + e;
+                var texy2 = this.hh3d - zz;
                 var index2 = texy2 * (this.hw3d * 2) + texx2;
                 if (newy < sort[index2]) {
                     sort[index2] = newy;
