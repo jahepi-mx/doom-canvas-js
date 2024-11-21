@@ -13,10 +13,12 @@ class Parser {
         this.textureManager = new TextureManager();
         this.textureCanvas = textureCanvas;
         this.texturesLoaded = 0;
+        this.callback = null;
     }
 
-    loadTextures() {
+    loadTextures(callback) {
         var textures = [];
+        this.callback = callback;
         fetch("assets/map/textures.dat").then((res) => res.text()).then((text) => {
             const lines = text.split('\n');
             for (let ls of lines) {
@@ -117,6 +119,7 @@ class Parser {
                     this.sectors.get(wall.id).add(wall.x, wall.y, nextWall.x, nextWall.y, wall.color, wall.bottom, wall.top, wall.obstructed, wall.draw, wall.sector == "null" ? null : this.sectors.has(parseInt(wall.sector)) ? this.sectors.get(parseInt(wall.sector)) : null, this.textureManager.get(wall.wallTextureTop), textureBottom);
                 }
             }, this);
+            this.callback();
         }).catch((e) => console.error(e));
     }
 }

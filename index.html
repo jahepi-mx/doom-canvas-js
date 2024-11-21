@@ -53,12 +53,12 @@ window.onload = function() {
     camZOffset.z = zCamOffset;
 
     parser = new Parser(player, camZOffset, tan, hw3d, hh3d, hw, hh, stack, document.getElementById("textureLoader"));
-    parser.loadTextures();
+    parser.loadTextures(function () {
+        render();
+    });
 
     document.onkeydown = onKeyDown;
     document.onkeyup = onKeyUp;
-
-    render();
 }
         
 function onKeyDown(key) {
