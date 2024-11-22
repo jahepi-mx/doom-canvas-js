@@ -140,20 +140,20 @@ class Sector {
         zScreenMinA = zScreenMinA > bounds.top ? bounds.top : zScreenMinA;
         zScreenMaxA = zScreenMaxA < bounds.bottom ? bounds.bottom : zScreenMaxA;
         zScreenMaxA = zScreenMaxA > bounds.top ? bounds.top : zScreenMaxA;
-        var maxz = Math.max(zScreenMinA, zScreenMaxA) | 0;
-        for (var sz = Math.min(zScreenMinA, zScreenMaxA) | 0; sz <= maxz; sz++) {
+        var maxz = Math.floor(Math.max(zScreenMinA, zScreenMaxA));
+        for (var sz = Math.ceil(Math.min(zScreenMinA, zScreenMaxA)); sz <= maxz; sz++) {
             var y = ((-this.camera.z + height) * tanH * (1 / sz)) | 0;
             var min = this.mins[y];
             var max = this.maxs[y];
-            var xMinScreen = Math.max(min * (1 / y) * tanW, bounds.left);
-            var xMaxScreen = Math.min(max * (1 / y) * tanW, bounds.right);
-            for (var xScreen = xMinScreen; xScreen < xMaxScreen; xScreen++) {
+            var xMinScreen = Math.floor(Math.max(min * (1 / y) * tanW, bounds.left));
+            var xMaxScreen = Math.floor(Math.min(max * (1 / y) * tanW, bounds.right));
+            for (var xScreen = xMinScreen; xScreen <= xMaxScreen; xScreen++) {
                 var x = xScreen / ((1 / y) * tanW);
                 var world = this.player.convertToWorld(x, y);
                 var texx = ((world.x - this.minx) / (this.maxx - this.minx) * texture.width) | 0; 
                 var texy = ((world.y - this.miny) / (this.maxy - this.miny) * texture.height) | 0;
                 var index = texture.getIndex(texx, texy);
-                var texx2 = this.hw3d + xScreen | 0;
+                var texx2 = this.hw3d + xScreen;
                 var texy2 = this.hh3d - sz;
                 var index2 = texy2 * (this.hw3d * 2) + texx2;
                 if (y < sort[index2]) {
