@@ -5,7 +5,7 @@ I kept the code to a minimum. It’s not the best code I’ve ever written, but 
 
 # Screenshots
 
-![Sin titulo](https://download.jahepi.net/images/f1.png)
+![Demo picture 1](https://jahepi-mx.github.io/images/dp1.png)
 
 Don’t be scared; I love Goya’s paintings. In case you’re wondering, the painting is called _Saturn Devouring His Son_.
-![Sin titulo](https://download.jahepi.net/images/f2.png)
+![Demo picture 2](https://jahepi-mx.github.io/images/dp2.png)
