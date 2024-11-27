@@ -158,12 +158,9 @@ class Sector {
                 var index2 = texy2 * (this.hw3d * 2) + texx2;
                 if (y < sort[index2]) {
                     sort[index2] = y;
-                    index2 *= 4;
                     var darkness = 1 - (x * x + y * y) / (1400 * 1400);
-                    imageData[index2] = texture.imageData[index] * darkness;
-                    imageData[index2 + 1] = texture.imageData[index + 1] * darkness;
-                    imageData[index2 + 2] = texture.imageData[index + 2] * darkness;
-                    imageData[index2 + 3] = texture.imageData[index + 3];
+                    darkness = darkness < 0 ? 0 : darkness;
+                    imageData[index2] = (texture.imageData[index + 3] << 24) | (texture.imageData[index + 2] * darkness << 16) | (texture.imageData[index + 1] * darkness << 8) | texture.imageData[index] * darkness;
                 }
             }
         }
@@ -216,6 +213,7 @@ class Sector {
             var newy = top == 0 ? screenToLocalDown / bottom : screenToLocalUp / top;
             var newx = e / (1 / newy * tanW);
             var darkness = 1 - (newx * newx + newy * newy) / (1400 * 1400);
+            darkness = darkness < 0 ? 0 : darkness;
             var texRatio = Math.abs((newx - startPos.x) * line.localDiff.x + (newy - startPos.y) * line.localDiff.y) / dotProj;
             var top2 = Math.floor(Math.min(bounds.top, top));
             var bottom2 = Math.ceil(Math.max(bounds.bottom, bottom));
@@ -228,11 +226,7 @@ class Sector {
                 var index2 = texy2 * (this.hw3d * 2) + texx2;
                 if (newy < sort[index2]) {
                     sort[index2] = newy;
-                    index2 *= 4;
-                    imageData[index2] = texture.imageData[index] * darkness;
-                    imageData[index2 + 1] = texture.imageData[index + 1] * darkness;
-                    imageData[index2 + 2] = texture.imageData[index + 2] * darkness;
-                    imageData[index2 + 3] = texture.imageData[index + 3];
+                    imageData[index2] = (texture.imageData[index + 3] << 24) | (texture.imageData[index + 2] * darkness << 16) | (texture.imageData[index + 1] * darkness << 8) | texture.imageData[index] * darkness;
                 }
             }
         } 

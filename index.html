@@ -36,6 +36,7 @@ var tan = 0;
 var camZOffset = new Vector(0, 0);
 var imageData = null;
 let sort = new Array(this.hw3d * this.hh3d * 4);
+var buffer = null;
 
 window.onload = function() {
     localCanvas = document.getElementById("localCanvas");
@@ -47,6 +48,7 @@ window.onload = function() {
     canvas3d.width = width3d;
     canvas3d.height = height3d;
     imageData = context3d.createImageData(width3d, height3d);
+    buffer = new Uint32Array(imageData.data.buffer);
     player = new Player(hw, hh);
 
     tan = 1 / Math.tan(player.fovDegrees * player.toRadians);
@@ -98,7 +100,7 @@ function render(time) {
 
     player.update(dt);
     player.localRender(localContext);
-    stack.run(dt, bound, localContext, imageData.data, sort);
+    stack.run(dt, bound, localContext, buffer, sort);
     player.canMove = stack.canMove;
     zCam = stack.zCam;
 
