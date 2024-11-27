@@ -41,12 +41,14 @@ class Sector {
         this.miny = Math.min(y1, this.miny);
         this.maxy = Math.max(y1, this.maxy);
         this.positions.push(new Vector(x1, y1));
+        this.localPositions.push(new Vector(x1, y1));
     }
 
     update(dt) {
-        this.localPositions = [];
-        for (let position of this.positions) {
-            this.localPositions.push(this.player.convertToLocal(position.x, position.y, true));
+        for (var i = 0; i < this.positions.length; i++) {
+            let vector = this.player.convertToLocal(this.positions[i].x, this.positions[i].y, true);
+            this.localPositions[i].x = vector.x;
+            this.localPositions[i].y = vector.y;
         }
         if (this.hasFloor || this.hasCeiling) this.getFloorCeilingLocalPositions();
     }
@@ -80,10 +82,10 @@ class Sector {
                 if (yDiff != 0 && y >= 1) {
                     var ratio = (y - yA) / yDiff;
                     var x = xA + ratio * xDiff;
-                    if (this.mins[y] == undefined) {
+                    if (this.mins[y] === undefined) {
                         this.mins[y] = x;
                     }
-                    if (this.maxs[y] == undefined) {
+                    if (this.maxs[y] === undefined) {
                         this.maxs[y] = x;
                     }
                     this.mins[y] = Math.min(x, this.mins[y]);
