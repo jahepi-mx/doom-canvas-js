@@ -3,6 +3,25 @@
 <head>
 <title>Doom canvas js</title>
 <meta charset="UTF-8">
+<style>
+    body {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 0;
+        height: 100vh;
+        background-color: #f0f0f0;
+    }
+
+    .canvas-container {
+        text-align: center;
+        margin: 10px;
+    }
+
+    canvas {
+        display: block;
+    }
+</style>
 <script src="vector.js"></script>
 <script src="line.js"></script>
 <script src="sector.js"></script>
@@ -13,7 +32,7 @@
 <script src="texturemanager.js"></script>
 <script>
 var w = 500;
-var h = 500;
+var h = 400;
 var hw = w * 0.5;
 var hh = h * 0.5;
 var localCanvas = null;
@@ -116,8 +135,15 @@ function render(time) {
 </head>
 <body>
 
-<canvas id="localCanvas" style="background-color: black;"></canvas>
-<canvas id="3dCanvas" style="background-color: #87ceeb;"></canvas>
+<div class="canvas-container">
+    <h2>Demo</h2>
+    <canvas id="3dCanvas" style="background-color: #87ceeb;"></canvas>
+</div>
+
+<div class="canvas-container">
+    <h2>Top View</h2>
+    <canvas id="localCanvas" style="background-color: black;"></canvas>
+</div>
 
 <canvas id="textureLoader" width="1" height="1" style="display: none;"></canvas>
 
