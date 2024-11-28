@@ -20,11 +20,14 @@ class Sector {
         this.tan = tan;
         this.hw3d = hw3d;
         this.hh3d = hh3d;
+        this.tanH = this.tan * this.hh3d;
+        this.tanW = this.tan * this.hw3d;
         this.hw = hw;
         this.hh = hh;
         this.collided = false;
         this.isInside = false;
         this.zCam = zCam;
+        this.epsilon = 1;
         // For ceiling and floor texturing
         this.minx = Number.MAX_VALUE;
         this.maxx = Number.MIN_VALUE;
@@ -134,23 +137,21 @@ class Sector {
     /* The idea behind this is to get the Z screen coordinates, which represent the screen height. We then loop through that range, retrieving the Y world coordinate (depth) and the X world coordinate, 
        and convert them to X screen coordinates. As we loop through this range, we convert each pixel back to world coordinates to get the color of the texture. */
     drawSurface(height, bounds, texture, imageData, sort) {
-        var tanH = this.tan * this.hh3d;
-        var tanW = this.tan * this.hw3d;
-        var zScreenMinA = (-this.camera.z + height) * (1 / this.min) * tanH;
-        var zScreenMaxA = (-this.camera.z + height) * (1 / this.max) * tanH;
+        var zScreenMinA = (-this.camera.z + height) * (1 / this.min) * this.tanH;
+        var zScreenMaxA = (-this.camera.z + height) * (1 / this.max) * this.tanH;
         zScreenMinA = zScreenMinA < bounds.bottom ? bounds.bottom : zScreenMinA;
         zScreenMinA = zScreenMinA > bounds.top ? bounds.top : zScreenMinA;
         zScreenMaxA = zScreenMaxA < bounds.bottom ? bounds.bottom : zScreenMaxA;
         zScreenMaxA = zScreenMaxA > bounds.top ? bounds.top : zScreenMaxA;
         var maxz = Math.floor(Math.max(zScreenMinA, zScreenMaxA));
         for (var sz = Math.ceil(Math.min(zScreenMinA, zScreenMaxA)); sz <= maxz; sz++) {
-            var y = ((-this.camera.z + height) * tanH * (1 / sz)) | 0;
+            var y = ((-this.camera.z + height) * this.tanH * (1 / sz)) | 0;
             var min = this.mins[y];
             var max = this.maxs[y];
-            var xMinScreen = Math.floor(Math.max(min * (1 / y) * tanW, bounds.left));
-            var xMaxScreen = Math.floor(Math.min(max * (1 / y) * tanW, bounds.right));
+            var xMinScreen = Math.floor(Math.max(min * (1 / y) * this.tanW, bounds.left));
+            var xMaxScreen = Math.floor(Math.min(max * (1 / y) * this.tanW, bounds.right));
             for (var xScreen = xMinScreen; xScreen <= xMaxScreen; xScreen++) {
-                var x = xScreen / ((1 / y) * tanW);
+                var x = xScreen / ((1 / y) * this.tanW);
                 var world = this.player.convertToWorld(x, y);
                 var texx = ((world.x - this.minx) / (this.maxx - this.minx) * texture.width) | 0; 
                 var texy = ((world.y - this.miny) / (this.maxy - this.miny) * texture.height) | 0;
@@ -169,24 +170,23 @@ class Sector {
     }
     
     drawWall(line, down, up, bounds, imageData, sort, texture) {
-        var tanW = this.tan * this.hw3d;
-        var tanH = this.tan * this.hh3d;
         var x = line.intersectA.x;
         var y = line.intersectA.y;
         var z = line.intersectA.z;
         var prevX = line.intersectB.x;
         var prevY = line.intersectB.y;
         var prevZ = line.intersectB.z;
-
-        var sxAUp = prevX * (1 / prevY) * tanW;
-        var szAUp = (prevZ + up) * (1 / prevY) * tanH;
-        var sxBUp = x * (1 / y) * tanW;
-        var szBUp = (z + up) * (1 / y) * tanH;
+        var pRatio = 1 / prevY;
+        var ratio = 1 / y;
+        var sxAUp = prevX * pRatio * this.tanW;
+        var szAUp = (prevZ + up) * pRatio * this.tanH;
+        var sxBUp = x * ratio * this.tanW;
+        var szBUp = (z + up) * ratio * this.tanH;
     
-        var sxADown = prevX * (1 / prevY) * tanW;
-        var szADown = (prevZ + down) * (1 / prevY) * tanH;
-        var sxBDown = x * (1 / y) * tanW;
-        var szBDown = (z + down) * (1 / y) * tanH;
+        var sxADown = prevX * pRatio * this.tanW;
+        var szADown = (prevZ + down) * pRatio * this.tanH;
+        var sxBDown = x * ratio * this.tanW;
+        var szBDown = (z + down) * ratio * this.tanH;
 
         // Texture
         var intersA = line.intersectA;
@@ -202,18 +202,23 @@ class Sector {
         var dotProj = line.localDiff.x * line.localDiff.x + line.localDiff.y * line.localDiff.y;
         var startPos = diffX1 * diffX2 + diffY1 * diffY2 <= 0 ? line.localPosition1 : line.localPosition2;
 
-        var screenToLocalUp = (prevZ + up) * tanH;
-        var screenToLocalDown = (prevZ + down) * tanH;
-        var upSlope = (szBUp - szAUp) / (sxBUp - sxAUp);
-        var downSlope = (szBDown - szADown) / (sxBDown - sxADown);
+        var screenToLocalUp = (prevZ + up) * this.tanH;
+        var screenToLocalDown = (prevZ + down) * this.tanH;
+        var upSlopeDen = sxBUp - sxAUp;
+        var downSlopeDen = sxBDown - sxADown;
+        if (Math.abs(upSlopeDen) < this.epsilon) {
+            return;
+        }
+        var upSlope = (szBUp - szAUp) / upSlopeDen;
+        var downSlope = (szBDown - szADown) / downSlopeDen;
         var max = Math.max(sxAUp, sxBUp);
         max = Math.floor(Math.min(max, bounds.right));
         var min = Math.min(sxAUp, sxBUp);
-        for (var e = Math.ceil(Math.max(min, bounds.left)); e <= max; e++) {
+        for (var e = Math.floor(Math.max(min, bounds.left)); e <= max; e++) {
             var top = upSlope * e + upSlope * -sxAUp + szAUp;
             var bottom = downSlope * e + downSlope * -sxADown + szADown;
             var newy = top == 0 ? screenToLocalDown / bottom : screenToLocalUp / top;
-            var newx = e / (1 / newy * tanW);
+            var newx = e / (1 / newy * this.tanW);
             var darkness = 1 - (newx * newx + newy * newy) / (1400 * 1400);
             darkness = darkness < 0 ? 0 : darkness;
             var texRatio = Math.abs((newx - startPos.x) * line.localDiff.x + (newy - startPos.y) * line.localDiff.y) / dotProj;
